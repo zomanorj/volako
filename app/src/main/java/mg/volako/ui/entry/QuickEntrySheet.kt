@@ -69,7 +69,7 @@ fun QuickEntrySheet(
     )
     // libelles frequents d'abord, completes par ceux par defaut
     val labels = (frequent + defaults).distinct().take(QuickEntryViewModel.MAX_LABELS)
-    val color = if (type == TransactionType.EXPENSE) VolakoTheme.finance.expense else VolakoTheme.finance.income
+    val color = if (type == TransactionType.EXPENSE) MaterialTheme.colorScheme.onSurface else VolakoTheme.finance.income
 
     val save = { label: String ->
         if (amount > 0 && label.isNotBlank()) {

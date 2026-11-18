@@ -18,6 +18,7 @@ import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import mg.volako.core.designsystem.R
 import mg.volako.core.designsystem.theme.AmountTextStyle
 import mg.volako.core.designsystem.theme.Spacing
@@ -48,7 +49,7 @@ fun NumericKeypad(
                         if (key == BACKSPACE) {
                             Icon(painterResource(R.drawable.ic_backspace), backspaceDescription)
                         } else {
-                            Text(key, style = AmountTextStyle.Large)
+                            Text(key, style = AmountTextStyle.Large.copy(fontSize = 24.sp))
                         }
                     }
                 }
@@ -65,8 +66,8 @@ private fun Key(modifier: Modifier, onClick: () -> Unit, content: @Composable ()
             haptic.performHapticFeedback(HapticFeedbackType.KeyboardTap)
             onClick()
         },
-        modifier = modifier.height(56.dp),
-        shape = RoundedCornerShape(16.dp),
+        modifier = modifier.height(64.dp),
+        shape = RoundedCornerShape(18.dp),
         color = MaterialTheme.colorScheme.surfaceContainerHigh,
     ) {
         Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) { content() }

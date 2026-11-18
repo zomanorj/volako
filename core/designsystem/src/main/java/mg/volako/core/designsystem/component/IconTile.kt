@@ -4,30 +4,34 @@ import androidx.annotation.DrawableRes
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.unit.dp
+import mg.volako.core.designsystem.theme.Sizes
 
-// Icone dans un rond colore pale (type d'operation, compte...)
+// Icone dans un carre arrondi au fond neutre. Seule l'icone porte la couleur (le sens),
+// le fond reste discret pour ne pas surcharger les listes.
 @Composable
-fun IconBadge(
+fun IconTile(
     @DrawableRes icon: Int,
-    color: Color,
+    tint: Color,
     modifier: Modifier = Modifier,
-    size: Dp = 40.dp,
+    size: Dp = Sizes.iconTile,
+    container: Color = MaterialTheme.colorScheme.surfaceContainerHigh,
 ) {
     Box(
         modifier = modifier
             .size(size)
-            .background(color.copy(alpha = 0.14f), CircleShape),
+            .background(container, RoundedCornerShape(size * 0.32f)),
         contentAlignment = Alignment.Center,
     ) {
-        Icon(painterResource(icon), contentDescription = null, tint = color, modifier = Modifier.size(size / 2))
+        // decoratif : le texte a cote dit deja de quoi il s'agit
+        Icon(painterResource(icon), contentDescription = null, tint = tint, modifier = Modifier.size(size / 2))
     }
 }

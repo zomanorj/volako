@@ -2,11 +2,14 @@ package mg.volako.core.designsystem.theme
 
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Shapes
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.ReadOnlyComposable
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.unit.dp
 
 private val LightScheme = lightColorScheme(
     primary = PrimaryLight, onPrimary = OnPrimaryLight,
@@ -48,6 +51,15 @@ private val DarkScheme = darkColorScheme(
     surfaceContainerHighest = SurfaceContainerHighestDark,
 )
 
+// Coins arrondis : plus doux que Material par defaut, coherents dans toute l'app
+private val VolakoShapes = Shapes(
+    extraSmall = RoundedCornerShape(8.dp),
+    small = RoundedCornerShape(12.dp),
+    medium = RoundedCornerShape(16.dp),
+    large = RoundedCornerShape(20.dp),
+    extraLarge = RoundedCornerShape(28.dp),
+)
+
 // Theme principal de l'app. Pas de couleurs dynamiques (Material You) expres :
 // les couleurs entree/sortie doivent rester les memes sur tous les telephones
 @Composable
@@ -60,6 +72,7 @@ fun VolakoTheme(
         MaterialTheme(
             colorScheme = if (darkTheme) DarkScheme else LightScheme,
             typography = VolakoTypography,
+            shapes = VolakoShapes,
             content = content,
         )
     }

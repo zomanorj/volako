@@ -34,7 +34,7 @@ import androidx.core.net.toUri
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import mg.volako.R
-import mg.volako.core.designsystem.component.IconBadge
+import mg.volako.core.designsystem.component.IconTile
 import mg.volako.core.designsystem.theme.VolakoTheme
 import mg.volako.core.designsystem.theme.Spacing
 import mg.volako.ui.SmsPermission
@@ -101,7 +101,7 @@ fun OnboardingScreen(viewModel: OnboardingViewModel = viewModel(factory = Onboar
                 }
 
                 is OnboardingState.Done -> {
-                    IconBadge(DesignR.drawable.ic_check_circle, VolakoTheme.finance.income, size = 64.dp)
+                    IconTile(DesignR.drawable.ic_check_circle, VolakoTheme.finance.income, size = 64.dp)
                     Text(stringResource(R.string.onboarding_done_title), style = MaterialTheme.typography.headlineSmall)
                     if (s.report.total == 0) {
                         Text(stringResource(R.string.onboarding_done_none), style = MaterialTheme.typography.bodyLarge)
@@ -134,7 +134,7 @@ fun OnboardingScreen(viewModel: OnboardingViewModel = viewModel(factory = Onboar
 
 @Composable
 private fun Intro(onAllow: () -> Unit, onLater: () -> Unit) {
-    IconBadge(DesignR.drawable.ic_sms, MaterialTheme.colorScheme.primary, size = 64.dp)
+    IconTile(DesignR.drawable.ic_sms, MaterialTheme.colorScheme.primary, size = 64.dp)
     Text(stringResource(R.string.onboarding_title), style = MaterialTheme.typography.headlineMedium)
     Text(
         stringResource(R.string.onboarding_body),
@@ -156,6 +156,6 @@ private fun Intro(onAllow: () -> Unit, onLater: () -> Unit) {
 
 @Composable
 private fun Message(icon: Int, color: androidx.compose.ui.graphics.Color, text: Int) {
-    IconBadge(icon, color, size = 64.dp)
+    IconTile(icon, color, size = 64.dp)
     Text(stringResource(text), style = MaterialTheme.typography.bodyLarge)
 }

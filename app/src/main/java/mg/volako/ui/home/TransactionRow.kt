@@ -29,7 +29,8 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
 import mg.volako.R
-import mg.volako.core.designsystem.component.IconBadge
+import mg.volako.core.designsystem.component.IconTile
+import mg.volako.core.designsystem.component.MoneyListItem
 import mg.volako.core.designsystem.component.formatAriary
 import mg.volako.core.designsystem.theme.AmountTextStyle
 import mg.volako.core.designsystem.theme.VolakoTheme
@@ -110,11 +111,19 @@ private fun SwipeBackground(direction: SwipeToDismissBoxValue) {
 @Composable
 fun TransactionRow(t: Transaction, modifier: Modifier = Modifier) {
     val f = VolakoTheme.finance
-    val (icon, color, sign) = when {
-        t.type == TransactionType.INCOME -> Triple(DesignR.drawable.ic_south_west, f.income, "+")
-        t.type == TransactionType.TRANSFER -> Triple(DesignR.drawable.ic_swap_horiz, f.transfer, "")
-        t.category == Category.CREDIT -> Triple(DesignR.drawable.ic_sim_card, f.leak, "−")
-        else -> Triple(DesignR.drawable.ic_north_east, f.expense, "−")
+    val neutral = MaterialTheme.colorScheme.onSurfaceVariant
+    // une couleur = un sens : vert pour ce qui entre, ambre pour les fuites, le reste neutre
+    val (icon, iconTint) = when {
+        t.type == TransactionType.INCOME -> DesignR.drawable.ic_south_west to f.income
+        t.type == TransactionType.TRANSFER -> DesignR.drawable.ic_swap_horiz to f.transfer
+        t.category == Category.CREDIT -> DesignR.drawable.ic_sim_card to f.leak
+        t.account == Account.CASH -> DesignR.drawable.ic_payments to neutral
+        else -> DesignR.drawable.ic_north_east to neutral
+    }
+    val (sign, amountColor) = when (t.type) {
+        TransactionType.INCOME -> "+" to f.income
+        TransactionType.TRANSFER -> "" to neutral
+        TransactionType.EXPENSE -> "−" to MaterialTheme.colorScheme.onSurface
     }
     val title = when {
         t.type == TransactionType.TRANSFER ->
@@ -126,51 +135,24 @@ fun TransactionRow(t: Transaction, modifier: Modifier = Modifier) {
         t.source == TransactionSource.SMS -> SmsTransactionMapper.meaningfulReason(t.label) ?: t.counterpartyName ?: "—"
         else -> t.label ?: t.counterpartyName ?: "—"
     }
-    // sous-titre : la personne (si le titre est deja un libelle) + l'heure
+    // sous-titre : la personne (si le titre est deja un libelle), le compte, l'heure
+    val account = stringResource(if (t.account == Account.CASH) R.string.home_cash else R.string.home_mvola)
     val subtitle = listOfNotNull(
         t.counterpartyName?.takeIf { it != title && t.type != TransactionType.TRANSFER },
+        account,
         t.occurredAt.format(TIME),
     ).joinToString(" · ")
 
-    Row(
-        modifier = modifier
-            .fillMaxWidth()
-            .background(MaterialTheme.colorScheme.background)
-            .padding(vertical = Spacing.sm),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(Spacing.md),
-    ) {
-        IconBadge(icon, color)
-        Column(Modifier.weight(1f)) {
-            Text(title, style = MaterialTheme.typography.bodyLarge, maxLines = 1, overflow = TextOverflow.Ellipsis)
-            Row(horizontalArrangement = Arrangement.spacedBy(Spacing.xs), verticalAlignment = Alignment.CenterVertically) {
-                // petite icone pour savoir de quel compte il s'agit
-                Icon(
-                    painterResource(if (t.account == Account.CASH) DesignR.drawable.ic_payments else DesignR.drawable.ic_smartphone),
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.size(14.dp),
-                )
-                Text(
-                    subtitle,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                )
-            }
-        }
-        Column(horizontalAlignment = Alignment.End) {
-            Text(sign + formatAriary(t.amount), style = AmountTextStyle.Regular, color = color)
-            if (t.fee > 0) {
-                Text(
-                    stringResource(R.string.home_fee_suffix, formatAriary(t.fee)),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = f.leak,
-                )
-            }
-        }
-    }
+    MoneyListItem(
+        leading = { IconTile(icon, tint = iconTint) },
+        title = title,
+        subtitle = subtitle,
+        amount = sign + formatAriary(t.amount),
+        amountColor = amountColor,
+        footnote = t.fee.takeIf { it > 0 }?.let { stringResource(R.string.home_fee_suffix, formatAriary(it)) },
+        footnoteColor = f.leak,
+        modifier = modifier.background(MaterialTheme.colorScheme.background),
+    )
 }
 
 private data class Quad(val color: androidx.compose.ui.graphics.Color, val icon: Int, val label: Int, val alignment: Alignment)

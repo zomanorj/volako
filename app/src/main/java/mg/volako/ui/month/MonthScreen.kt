@@ -170,7 +170,7 @@ private fun NetCard(report: MonthReport) {
                 color = MaterialTheme.colorScheme.onPrimaryContainer,
             )
             LabelValueRow(stringResource(R.string.home_income), formatAriary(report.summary.income), valueColor = f.income)
-            LabelValueRow(stringResource(R.string.home_expenses), formatAriary(report.summary.expenses), valueColor = f.expense)
+            LabelValueRow(stringResource(R.string.home_expenses), formatAriary(report.summary.expenses), valueColor = MaterialTheme.colorScheme.onSurface)
         }
     }
 }
@@ -234,7 +234,7 @@ private fun SpendingBar(item: SpendingItem, max: Long) {
                     .fillMaxWidth(fraction = (item.total.toFloat() / max).coerceIn(0.02f, 1f))
                     .height(8.dp)
                     .clip(RoundedCornerShape(4.dp))
-                    .background(VolakoTheme.finance.expenseMark),
+                    .background(VolakoTheme.finance.chartBar),
             )
         }
     }

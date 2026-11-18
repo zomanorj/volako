@@ -31,32 +31,44 @@ internal val VolakoTypography = Typography(
     titleSmall = base.titleSmall.copy(fontFamily = Inter),
     bodyLarge = base.bodyLarge.copy(fontFamily = Inter),
     bodyMedium = base.bodyMedium.copy(fontFamily = Inter),
-    bodySmall = base.bodySmall.copy(fontFamily = Inter),
+    // un peu plus grand que Material (12 sp) : plus lisible pour les infos secondaires
+    bodySmall = base.bodySmall.copy(fontFamily = Inter, fontSize = 13.sp, lineHeight = 18.sp),
     labelLarge = base.labelLarge.copy(fontFamily = Inter),
     labelMedium = base.labelMedium.copy(fontFamily = Inter),
-    labelSmall = base.labelSmall.copy(fontFamily = Inter),
+    labelSmall = base.labelSmall.copy(fontFamily = Inter, fontSize = 12.sp, lineHeight = 16.sp),
 )
 
-// Style pour les montants : chiffres alignes (tnum) pour que les colonnes ne bougent pas
+// Styles pour les montants : chiffres alignes (tnum) pour que les colonnes ne bougent pas
 object AmountTextStyle {
+    // le total sur l'accueil
     val Hero = TextStyle(
         fontFamily = Inter,
         fontWeight = FontWeight.Bold,
-        fontSize = 36.sp,
-        lineHeight = 44.sp,
-        letterSpacing = (-0.5).sp,
+        fontSize = 44.sp,
+        lineHeight = 52.sp,
+        letterSpacing = (-1).sp,
         fontFeatureSettings = "tnum",
     )
+    // solde d'un compte dans une tuile
     val Large = TextStyle(
         fontFamily = Inter,
         fontWeight = FontWeight.SemiBold,
-        fontSize = 20.sp,
+        fontSize = 22.sp,
         lineHeight = 28.sp,
         fontFeatureSettings = "tnum",
     )
+    // chiffre d'une petite tuile (sorties, credit, frais)
+    val Medium = TextStyle(
+        fontFamily = Inter,
+        fontWeight = FontWeight.SemiBold,
+        fontSize = 17.sp,
+        lineHeight = 24.sp,
+        fontFeatureSettings = "tnum",
+    )
+    // montant d'une ligne d'operation
     val Regular = TextStyle(
         fontFamily = Inter,
-        fontWeight = FontWeight.Medium,
+        fontWeight = FontWeight.SemiBold,
         fontSize = 16.sp,
         lineHeight = 24.sp,
         fontFeatureSettings = "tnum",

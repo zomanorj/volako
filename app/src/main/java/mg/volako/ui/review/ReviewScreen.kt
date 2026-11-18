@@ -34,7 +34,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import mg.volako.R
-import mg.volako.core.designsystem.component.IconBadge
+import mg.volako.core.designsystem.component.IconTile
 import mg.volako.core.designsystem.component.formatAriary
 import mg.volako.core.designsystem.theme.VolakoTheme
 import mg.volako.core.designsystem.theme.Spacing
@@ -144,7 +144,7 @@ private fun GapCard(gap: BalanceGap, onOk: () -> Unit) {
             horizontalArrangement = Arrangement.spacedBy(Spacing.md),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            IconBadge(DesignR.drawable.ic_report, VolakoTheme.finance.leak)
+            IconTile(DesignR.drawable.ic_report, VolakoTheme.finance.leak)
             Text(
                 stringResource(
                     R.string.review_gap_text,
@@ -167,7 +167,7 @@ private fun AllGood(modifier: Modifier) {
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(Spacing.lg, Alignment.CenterVertically),
     ) {
-        IconBadge(DesignR.drawable.ic_task_alt, VolakoTheme.finance.income, size = 64.dp)
+        IconTile(DesignR.drawable.ic_task_alt, VolakoTheme.finance.income, size = 64.dp)
         Text(stringResource(R.string.review_all_good), style = MaterialTheme.typography.titleMedium)
     }
 }
