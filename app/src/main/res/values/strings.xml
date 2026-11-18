@@ -172,4 +172,16 @@
     <string name="count_short">Compter</string>
     <string name="operations_title">Opérations</string>
     <string name="summary_title">Résumé</string>
+
+    <!-- Refonte etape 3 : ecran Operations -->
+    <string name="ops_search_hint">Nom, libellé ou montant</string>
+    <string name="ops_search_clear">Effacer la recherche</string>
+    <string name="ops_filter_all">Tout</string>
+    <string name="ops_filter_mvola">MVola</string>
+    <string name="ops_filter_cash">Espèces</string>
+    <string name="ops_filter_income">Entrées</string>
+    <string name="ops_filter_credit">Crédit</string>
+    <string name="ops_filter_fees">Frais</string>
+    <string name="ops_no_result">Aucune opération ne correspond</string>
+    <string name="ops_no_result_hint">Essaie un autre mot ou un autre filtre.</string>
 </resources>
