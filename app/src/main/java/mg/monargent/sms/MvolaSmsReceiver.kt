@@ -4,39 +4,30 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.provider.Telephony
-import kotlinx.coroutines.launch
-import mg.monargent.MonArgentApplication
-import mg.monargent.core.data.SmsRecordResult
+import android.util.Log
 import mg.monargent.core.sms.MvolaSmsParser
-import mg.monargent.notification.OperationNotifier
 import java.time.LocalDateTime
 
-// Appele par Android a chaque SMS recu, meme si l'app est fermee
+// Appele par Android a chaque SMS recu, meme si l'app est fermee.
+// IMPORTANT : Android passe le SMS aux apps une par une et attend que chacune ait fini
+// avant de livrer le SMS suivant. Donc ici on fait le strict minimum et on rend la main
+// tout de suite. Le vrai travail (base de donnees) est fait par RecordSmsWorker.
 class MvolaSmsReceiver : BroadcastReceiver() {
 
     override fun onReceive(context: Context, intent: Intent) {
         if (intent.action != Telephony.Sms.Intents.SMS_RECEIVED_ACTION) return
+        // filet de securite : quoi qu'il arrive, on ne fait jamais planter la reception
+        runCatching {
+            // un long SMS arrive en plusieurs morceaux : on les recolle
+            val parts = Telephony.Sms.Intents.getMessagesFromIntent(intent) ?: return
+            val first = parts.firstOrNull() ?: return
+            if (!MvolaSmsParser.isFromMvola(first.originatingAddress)) return
+            val body = parts.joinToString("") { it.messageBody.orEmpty() }
+            RecordSmsWorker.enqueue(context, body, LocalDateTime.now())
+        }.onFailure { Log.e(TAG, "SMS MVola non transmis au worker", it) }
+    }
 
-        // un long SMS arrive en plusieurs morceaux : on les recolle
-        val parts = Telephony.Sms.Intents.getMessagesFromIntent(intent) ?: return
-        val first = parts.firstOrNull() ?: return
-        if (!MvolaSmsParser.isFromMvola(first.originatingAddress)) return
-        val body = parts.joinToString("") { it.messageBody.orEmpty() }
-        val receivedAt = LocalDateTime.now()
-
-        val app = context.applicationContext as MonArgentApplication
-        // goAsync : on a quelques secondes pour ecrire en base (doc officielle)
-        val pending = goAsync()
-        app.applicationScope.launch {
-            try {
-                val recorded = app.container.transactionRepository.recordSms(body, receivedAt)
-                val transaction = recorded.transaction
-                if (recorded.result == SmsRecordResult.ADDED && transaction != null) {
-                    OperationNotifier.notify(context, transaction)
-                }
-            } finally {
-                pending.finish()
-            }
-        }
+    private companion object {
+        const val TAG = "MvolaSmsReceiver"
     }
 }

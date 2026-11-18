@@ -22,7 +22,7 @@ import mg.monargent.core.designsystem.R as DesignR
 // Petite notification discrete a chaque operation MVola detectee
 object OperationNotifier {
 
-    private const val CHANNEL_ID = "mvola_operations"
+    const val CHANNEL_ID = "mvola_operations"
 
     // le canal doit exister avant la 1re notif. L'utilisateur peut le couper dans les reglages
     fun createChannel(context: Context) {

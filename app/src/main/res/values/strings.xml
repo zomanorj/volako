@@ -47,4 +47,5 @@
     <string name="notif_credit">Crédit</string>
     <string name="notif_payment">Envoi</string>
     <string name="notif_received">Argent reçu</string>
+    <string name="notif_recording">Enregistrement d\'une opération MVola…</string>
 </resources>
