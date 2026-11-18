@@ -1,4 +1,4 @@
-package mg.monargent.ui.smstest
+package mg.monargent.ui.lab
 
 import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
@@ -7,110 +7,50 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalClipboard
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import kotlinx.coroutines.launch
 import mg.monargent.R
 import mg.monargent.core.designsystem.component.formatAriary
 import mg.monargent.core.designsystem.theme.AmountTextStyle
 import mg.monargent.core.designsystem.theme.MonArgentTheme
 import mg.monargent.core.designsystem.theme.Spacing
-import mg.monargent.core.sms.MvolaSmsParser
 import mg.monargent.core.sms.OperationKind
 import mg.monargent.core.sms.ParsedSms
-import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import mg.monargent.core.designsystem.R as DesignR
 
-// Ecran temporaire de l'etape 1 : on colle un SMS et on voit ce que le parseur comprend.
-// Sera retire quand l'import automatique marchera (etape 3).
+// Apercu de ce que le parseur comprend d'un SMS
 @Composable
-fun SmsTestScreen() {
-    var body by rememberSaveable { mutableStateOf("") }
-    // on analyse a chaque frappe, pas besoin de bouton
-    val result = remember(body) {
-        if (body.isBlank()) null else MvolaSmsParser.parse(body, LocalDateTime.now())
-    }
-    val clipboard = LocalClipboard.current
-    val scope = rememberCoroutineScope()
-
-    Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
-        Column(
-            modifier = Modifier
-                .safeDrawingPadding()
-                .imePadding()
-                .verticalScroll(rememberScrollState())
-                .padding(Spacing.lg),
-            verticalArrangement = Arrangement.spacedBy(Spacing.lg),
-        ) {
-            Text(stringResource(R.string.smstest_title), style = MaterialTheme.typography.headlineSmall)
-
-            OutlinedTextField(
-                value = body,
-                onValueChange = { body = it },
-                placeholder = { Text(stringResource(R.string.smstest_hint)) },
-                minLines = 4,
-                modifier = Modifier.fillMaxWidth(),
-            )
-
-            FilledTonalButton(onClick = {
-                scope.launch {
-                    val text = clipboard.getClipEntry()?.clipData?.getItemAt(0)?.text
-                    if (text != null) body = text.toString()
-                }
-            }) {
-                Icon(painterResource(DesignR.drawable.ic_content_paste), contentDescription = null, modifier = Modifier.size(18.dp))
-                Text(stringResource(R.string.smstest_paste), modifier = Modifier.padding(start = Spacing.sm))
-            }
-
-            when (result) {
-                null -> Unit
-                is ParsedSms.Operation -> OperationCard(result)
-                is ParsedSms.Unknown -> MessageCard(
-                    icon = DesignR.drawable.ic_help,
-                    title = R.string.smstest_unknown_title,
-                    body = R.string.smstest_unknown_body,
-                    color = MonArgentTheme.finance.leak,
-                )
-                ParsedSms.Ignored -> MessageCard(
-                    icon = DesignR.drawable.ic_block,
-                    title = R.string.smstest_ignored_title,
-                    body = R.string.smstest_ignored_body,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-            }
-        }
+internal fun SmsPreview(result: ParsedSms) {
+    when (result) {
+        is ParsedSms.Operation -> OperationCard(result)
+        is ParsedSms.Unknown -> MessageCard(
+            icon = DesignR.drawable.ic_help,
+            title = R.string.smstest_unknown_title,
+            body = R.string.smstest_unknown_body,
+            color = MonArgentTheme.finance.leak,
+        )
+        ParsedSms.Ignored -> MessageCard(
+            icon = DesignR.drawable.ic_block,
+            title = R.string.smstest_ignored_title,
+            body = R.string.smstest_ignored_body,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
     }
 }
 
@@ -158,7 +98,7 @@ private fun MessageCard(@DrawableRes icon: Int, @StringRes title: Int, @StringRe
 }
 
 @Composable
-private fun IconBadge(@DrawableRes icon: Int, color: Color) {
+internal fun IconBadge(@DrawableRes icon: Int, color: Color) {
     Box(
         modifier = Modifier
             .size(40.dp)
@@ -170,7 +110,7 @@ private fun IconBadge(@DrawableRes icon: Int, color: Color) {
 }
 
 @Composable
-private fun InfoRow(@StringRes label: Int, value: String, valueColor: Color = MaterialTheme.colorScheme.onSurface) {
+internal fun InfoRow(@StringRes label: Int, value: String, valueColor: Color = MaterialTheme.colorScheme.onSurface) {
     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(Spacing.lg)) {
         Text(stringResource(label), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
         Text(
@@ -197,9 +137,3 @@ private fun kindStyle(kind: OperationKind): Triple<Int, Int, Color> {
 }
 
 private val DATE_FORMAT = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm")
-
-@Preview(showBackground = true)
-@Composable
-private fun SmsTestScreenPreview() {
-    MonArgentTheme { SmsTestScreen() }
-}

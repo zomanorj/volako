@@ -12,10 +12,16 @@ App Android pour suivre son argent MVola et espèces. Les SMS MVola sont lus aut
 |---|---|
 | `:app` | Point d'entrée, navigation |
 | `:core:designsystem` | Thème, couleurs, typo, composants partagés |
+| `:core:model` | Types de base (Kotlin pur) |
+| `:core:sms` | Lecture des SMS MVola (Kotlin pur) |
+| `:core:domain` | Règles métier : SMS → opération, soldes, résumé du mois (Kotlin pur) |
+| `:core:database` | Base locale Room (schémas dans `core/database/schemas`) |
+| `:core:data` | Dépôt : seul point d'accès aux données pour l'app |
 
 ## Compiler
 ```bash
 export JAVA_HOME=~/devtools/jdk17
+./gradlew test          # tests rapides
 ./gradlew assembleDebug
 # APK : app/build/outputs/apk/debug/app-debug.apk
 ```

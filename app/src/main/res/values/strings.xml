@@ -2,7 +2,7 @@
     <string name="app_name">Mon Argent</string>
 
     <!-- Ecran temporaire "Tester un SMS" (etape 1) -->
-    <string name="smstest_title">Tester un SMS MVola</string>
+    <string name="smstest_title">Labo</string>
     <string name="smstest_hint">Colle ici un SMS MVola</string>
     <string name="smstest_paste">Coller</string>
     <string name="smstest_kind_credit">Achat de crédit</string>
@@ -21,4 +21,25 @@
     <string name="smstest_operator">Opérateur</string>
     <string name="smstest_date">Date</string>
     <string name="smstest_ref">Référence</string>
+    <string name="lab_save">Enregistrer</string>
+    <string name="lab_result_added">Opération enregistrée</string>
+    <string name="lab_result_duplicate">Déjà enregistrée (même référence)</string>
+    <string name="lab_result_pending">Ajouté à « À vérifier »</string>
+    <string name="lab_result_ignored">Rien à enregistrer</string>
+    <string name="lab_total">Total</string>
+    <string name="lab_mvola">MVola</string>
+    <string name="lab_cash">Espèces</string>
+    <string name="lab_month">Ce mois</string>
+    <string name="lab_income">Entrées</string>
+    <string name="lab_expenses">Sorties</string>
+    <string name="lab_credit">Crédit</string>
+    <string name="lab_fees">Frais MVola</string>
+    <string name="lab_operations">Opérations</string>
+    <string name="lab_empty">Aucune opération. Colle un SMS puis appuie sur Enregistrer.</string>
+    <string name="lab_pending_count">SMS à vérifier : %1$d</string>
+    <string name="lab_gaps_count">Écarts de solde détectés : %1$d</string>
+    <string name="lab_delete">Supprimer</string>
+    <string name="lab_withdrawal">Retrait</string>
+    <string name="lab_deposit">Dépôt</string>
+    <string name="lab_fee_suffix">+ %1$s de frais</string>
 </resources>
