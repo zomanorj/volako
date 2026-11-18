@@ -16,6 +16,9 @@ interface PendingSmsDao {
     @Insert(onConflict = OnConflictStrategy.IGNORE)
     suspend fun insert(sms: PendingSmsEntity): Long
 
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
+    suspend fun insertAll(sms: List<PendingSmsEntity>): List<Long>
+
     @Query("DELETE FROM pending_sms WHERE id = :id")
     suspend fun delete(id: Long)
 }

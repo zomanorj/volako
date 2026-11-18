@@ -10,9 +10,9 @@ import java.time.ZoneId
 // Conversions base <-> modele. On garde la base separee du modele pour pouvoir
 // changer l'un sans casser l'autre.
 
-internal fun LocalDateTime.toEpochMillis(): Long = atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()
+fun LocalDateTime.toEpochMillis(): Long = atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()
 
-internal fun Long.toLocalDateTime(): LocalDateTime =
+fun Long.toLocalDateTime(): LocalDateTime =
     LocalDateTime.ofInstant(Instant.ofEpochMilli(this), ZoneId.systemDefault())
 
 fun TransactionEntity.asModel() = Transaction(

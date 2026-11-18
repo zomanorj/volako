@@ -1,6 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
+    <!-- lire les SMS MVola deja recus (import de l'historique) -->
+    <uses-permission android:name="android.permission.READ_SMS" />
+    <!-- pas obligatoire : sans SMS on peut quand meme noter les especes -->
+    <uses-feature android:name="android.hardware.telephony" android:required="false" />
+
     <application
         android:name=".MonArgentApplication"
         android:allowBackup="true"

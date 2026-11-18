@@ -17,4 +17,5 @@ dependencies {
     implementation(project(":core:database"))
     implementation(project(":core:sms"))
     api(libs.kotlinx.coroutines.core)
+    implementation(libs.androidx.datastore.preferences)
 }

@@ -1,4 +1,4 @@
-package mg.monargent.ui.lab
+package mg.monargent.ui.home
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider.AndroidViewModelFactory.Companion.APPLICATION_KEY
@@ -13,16 +13,15 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import mg.monargent.MonArgentApplication
-import mg.monargent.core.data.SmsRecordResult
+import mg.monargent.core.data.SmsImporter
 import mg.monargent.core.data.TransactionRepository
 import mg.monargent.core.domain.Ledger
 import mg.monargent.core.model.Balances
 import mg.monargent.core.model.MonthSummary
 import mg.monargent.core.model.Transaction
-import java.time.LocalDateTime
 import java.time.YearMonth
 
-data class LabUiState(
+data class HomeUiState(
     val balances: Balances = Balances(0, 0),
     val month: MonthSummary = MonthSummary(YearMonth.now(), 0, 0, 0, 0),
     val transactions: List<Transaction> = emptyList(),
@@ -30,46 +29,46 @@ data class LabUiState(
     val gapCount: Int = 0,
 )
 
-// ViewModel du labo (temporaire, etape 2) : garde l'etat de l'ecran meme si on tourne le telephone
-class LabViewModel(private val repository: TransactionRepository) : ViewModel() {
+class HomeViewModel(
+    repository: TransactionRepository,
+    private val importer: SmsImporter,
+) : ViewModel() {
 
-    val uiState: StateFlow<LabUiState> = combine(
+    val uiState: StateFlow<HomeUiState> = combine(
         repository.observeTransactions(),
-        repository.observeMonthSummary(YearMonth.now()),
         repository.observePendingSms(),
-    ) { transactions, month, pending ->
-        LabUiState(
+    ) { transactions, pending ->
+        HomeUiState(
             balances = Ledger.balances(transactions),
-            month = month,
+            month = Ledger.monthSummary(transactions, YearMonth.now()),
             transactions = transactions,
             pendingCount = pending.size,
             gapCount = Ledger.balanceGaps(transactions).size,
         )
-    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), LabUiState())
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), HomeUiState())
 
-    // resultat du dernier "Enregistrer", affiche sous le bouton
-    private val _lastResult = MutableStateFlow<SmsRecordResult?>(null)
-    val lastResult: StateFlow<SmsRecordResult?> = _lastResult.asStateFlow()
+    private val _isSyncing = MutableStateFlow(false)
+    val isSyncing: StateFlow<Boolean> = _isSyncing.asStateFlow()
 
-    fun record(body: String) {
+    // nombre d'operations ajoutees par la derniere synchro (pour un petit message)
+    private val _newCount = MutableStateFlow(0)
+    val newCount: StateFlow<Int> = _newCount.asStateFlow()
+
+    // relit les nouveaux SMS MVola (appele a chaque fois que l'app revient au premier plan)
+    fun sync() {
+        if (_isSyncing.value) return
         viewModelScope.launch {
-            _lastResult.value = repository.recordSms(body, LocalDateTime.now())
+            _isSyncing.value = true
+            runCatching { importer.importNew() }.onSuccess { _newCount.value = it.added }
+            _isSyncing.value = false
         }
-    }
-
-    fun clearResult() {
-        _lastResult.value = null
-    }
-
-    fun delete(id: Long) {
-        viewModelScope.launch { repository.delete(id) }
     }
 
     companion object {
         val Factory = viewModelFactory {
             initializer {
-                val app = this[APPLICATION_KEY] as MonArgentApplication
-                LabViewModel(app.container.transactionRepository)
+                val c = (this[APPLICATION_KEY] as MonArgentApplication).container
+                HomeViewModel(c.transactionRepository, c.smsImporter)
             }
         }
     }

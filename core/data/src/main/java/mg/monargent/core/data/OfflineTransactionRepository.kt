@@ -6,6 +6,7 @@ import mg.monargent.core.database.dao.PendingSmsDao
 import mg.monargent.core.database.dao.TransactionDao
 import mg.monargent.core.database.entity.asEntity
 import mg.monargent.core.database.entity.asModel
+import mg.monargent.core.database.entity.toEpochMillis
 import mg.monargent.core.domain.Ledger
 import mg.monargent.core.domain.SmsTransactionMapper
 import mg.monargent.core.model.Balances
@@ -48,13 +49,46 @@ class OfflineTransactionRepository(
                     SmsRecordResult.DUPLICATE
                 } else {
                     // solde du SMS d'avant, pour la regle des frais non preleves
-                    val previous = transactionDao.lastSms()?.smsBalance
+                    val previous = transactionDao.lastSmsBefore(parsed.occurredAt.toEpochMillis())?.smsBalance
                     val transaction = SmsTransactionMapper.map(parsed, previous)
                     val id = transactionDao.insert(transaction.asEntity())
                     if (id == -1L) SmsRecordResult.DUPLICATE else SmsRecordResult.ADDED
                 }
             }
         }
+
+    override suspend fun importSms(messages: List<RawSms>): ImportReport {
+        val operations = mutableListOf<ParsedSms.Operation>()
+        val unknown = mutableListOf<RawSms>()
+        var ignored = 0
+        for (sms in messages) {
+            when (val parsed = MvolaSmsParser.parse(sms.body, sms.receivedAt)) {
+                is ParsedSms.Operation -> operations += parsed
+                is ParsedSms.Unknown -> unknown += sms
+                ParsedSms.Ignored -> ignored++
+            }
+        }
+
+        // ordre chronologique pour enchainer les soldes (meme tri que Ledger)
+        operations.sortWith(compareBy({ it.occurredAt }, { it.reference.toLongOrNull() ?: Long.MAX_VALUE }))
+        var previous = operations.firstOrNull()?.let {
+            transactionDao.lastSmsBefore(it.occurredAt.toEpochMillis())?.smsBalance
+        }
+        val entities = operations.map { op ->
+            SmsTransactionMapper.map(op, previous).also { previous = op.balanceAfter }.asEntity()
+        }
+
+        val ids = transactionDao.insertAll(entities)
+        pendingSmsDao.insertAll(unknown.map { PendingSms(body = it.body, receivedAt = it.receivedAt).asEntity() })
+
+        val added = ids.count { it != -1L }
+        return ImportReport(
+            added = added,
+            duplicates = ids.size - added,
+            pending = unknown.size,
+            ignored = ignored,
+        )
+    }
 
     override suspend fun addManual(transaction: Transaction) {
         transactionDao.insert(transaction.copy(id = 0, source = TransactionSource.MANUAL).asEntity())

@@ -18,15 +18,19 @@ interface TransactionDao {
     @Insert(onConflict = OnConflictStrategy.IGNORE)
     suspend fun insert(transaction: TransactionEntity): Long
 
-    // dernier SMS enregistre, pour connaitre le solde MVola d'avant
+    // plusieurs d'un coup (import de l'historique). -1 pour chaque doublon ignore
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
+    suspend fun insertAll(transactions: List<TransactionEntity>): List<Long>
+
+    // dernier SMS avant une date, pour connaitre le solde MVola d'avant
     @Query(
         """
-        SELECT * FROM transactions WHERE sms_balance IS NOT NULL
+        SELECT * FROM transactions WHERE sms_balance IS NOT NULL AND occurred_at <= :before
         ORDER BY occurred_at DESC, CAST(sms_reference AS INTEGER) DESC
         LIMIT 1
         """,
     )
-    suspend fun lastSms(): TransactionEntity?
+    suspend fun lastSmsBefore(before: Long): TransactionEntity?
 
     @Query("SELECT EXISTS(SELECT 1 FROM transactions WHERE sms_reference = :reference)")
     suspend fun existsByReference(reference: String): Boolean
