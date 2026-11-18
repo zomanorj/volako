@@ -29,7 +29,8 @@ export JAVA_HOME=~/devtools/jdk17
 ## Installer sur le téléphone (Wi-Fi)
 Une fois le téléphone associé (Options de développement > Débogage sans fil) :
 ```bash
-tools/run_on_phone.sh 192.168.x.x:PORT
+tools/run_on_phone.sh            # retrouve tout seul le port du telephone
+tools/run_on_phone.sh IP:PORT    # ou en le donnant
 ```
 
 ## Ajouter une icône
