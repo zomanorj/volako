@@ -16,7 +16,8 @@ interface TransactionRepository {
     fun observeMonthSummary(month: YearMonth): Flow<MonthSummary>
     fun observePendingSms(): Flow<List<PendingSms>>
 
-    suspend fun recordSms(body: String, receivedAt: LocalDateTime): SmsRecordResult
+    // un seul SMS (recu en direct)
+    suspend fun recordSms(body: String, receivedAt: LocalDateTime): RecordedSms
 
     // import en lot (historique) : bien plus rapide que recordSms un par un
     suspend fun importSms(messages: List<RawSms>): ImportReport

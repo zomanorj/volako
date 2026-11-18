@@ -3,6 +3,10 @@
 
     <!-- lire les SMS MVola deja recus (import de l'historique) -->
     <uses-permission android:name="android.permission.READ_SMS" />
+    <!-- recevoir les nouveaux SMS MVola meme quand l'app est fermee -->
+    <uses-permission android:name="android.permission.RECEIVE_SMS" />
+    <!-- petite notification "-500 Ar Credit" (Android 13+) -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <!-- pas obligatoire : sans SMS on peut quand meme noter les especes -->
     <uses-feature android:name="android.hardware.telephony" android:required="false" />
 
@@ -22,6 +26,16 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <!-- BROADCAST_SMS : seul le systeme peut nous envoyer ce message (securite) -->
+        <receiver
+            android:name=".sms.MvolaSmsReceiver"
+            android:exported="true"
+            android:permission="android.permission.BROADCAST_SMS">
+            <intent-filter>
+                <action android:name="android.provider.Telephony.SMS_RECEIVED" />
+            </intent-filter>
+        </receiver>
     </application>
 
 </manifest>

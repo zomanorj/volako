@@ -46,12 +46,17 @@ fun OnboardingScreen(viewModel: OnboardingViewModel = viewModel(factory = Onboar
     val state by viewModel.state.collectAsStateWithLifecycle()
     val context = LocalContext.current
     val activity = LocalActivity.current
-    val launcher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
-        viewModel.onPermissionResult(granted)
+    // on demande tout d'un coup : lire les SMS, recevoir les nouveaux, notifications
+    val launcher = rememberLauncherForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { result ->
+        viewModel.onPermissionResult(result[SmsPermission.READ] == true)
     }
 
     val askPermission = {
-        if (SmsPermission.isGranted(context)) viewModel.startImport() else launcher.launch(SmsPermission.READ)
+        if (SmsPermission.isGranted(context)) {
+            viewModel.startImport()
+        } else {
+            launcher.launch(arrayOf(SmsPermission.READ, *SmsPermission.LIVE))
+        }
     }
 
     Surface(Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {

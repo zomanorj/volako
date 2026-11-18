@@ -28,8 +28,16 @@ class UserPreferences(private val context: Context) {
         context.dataStore.edit { it[LAST_SMS_DATE] = millis }
     }
 
+    // pour ne demander qu'une fois les permissions "reception SMS" et "notifications"
+    suspend fun livePermissionsAsked(): Boolean = context.dataStore.data.first()[LIVE_PERMS_ASKED] ?: false
+
+    suspend fun setLivePermissionsAsked() {
+        context.dataStore.edit { it[LIVE_PERMS_ASKED] = true }
+    }
+
     private companion object {
         val ONBOARDING_DONE = booleanPreferencesKey("onboarding_done")
         val LAST_SMS_DATE = longPreferencesKey("last_imported_sms_date")
+        val LIVE_PERMS_ASKED = booleanPreferencesKey("live_permissions_asked")
     }
 }

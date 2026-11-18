@@ -15,6 +15,7 @@ import kotlinx.coroutines.launch
 import mg.monargent.MonArgentApplication
 import mg.monargent.core.data.SmsImporter
 import mg.monargent.core.data.TransactionRepository
+import mg.monargent.core.data.UserPreferences
 import mg.monargent.core.domain.Ledger
 import mg.monargent.core.model.Balances
 import mg.monargent.core.model.MonthSummary
@@ -32,6 +33,7 @@ data class HomeUiState(
 class HomeViewModel(
     repository: TransactionRepository,
     private val importer: SmsImporter,
+    private val preferences: UserPreferences,
 ) : ViewModel() {
 
     val uiState: StateFlow<HomeUiState> = combine(
@@ -64,11 +66,18 @@ class HomeViewModel(
         }
     }
 
+    // vrai la 1re fois seulement : l'ecran demande alors les permissions "en direct"
+    suspend fun shouldAskLivePermissions(): Boolean = !preferences.livePermissionsAsked()
+
+    fun onLivePermissionsAsked() {
+        viewModelScope.launch { preferences.setLivePermissionsAsked() }
+    }
+
     companion object {
         val Factory = viewModelFactory {
             initializer {
                 val c = (this[APPLICATION_KEY] as MonArgentApplication).container
-                HomeViewModel(c.transactionRepository, c.smsImporter)
+                HomeViewModel(c.transactionRepository, c.smsImporter, c.preferences)
             }
         }
     }

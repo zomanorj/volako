@@ -37,22 +37,28 @@ class OfflineTransactionRepository(
     override fun observePendingSms(): Flow<List<PendingSms>> =
         pendingSmsDao.observeAll().map { list -> list.map { it.asModel() } }
 
-    override suspend fun recordSms(body: String, receivedAt: LocalDateTime): SmsRecordResult =
+    override suspend fun recordSms(body: String, receivedAt: LocalDateTime): RecordedSms =
         when (val parsed = MvolaSmsParser.parse(body, receivedAt)) {
-            ParsedSms.Ignored -> SmsRecordResult.IGNORED
+            ParsedSms.Ignored -> RecordedSms(SmsRecordResult.IGNORED)
             is ParsedSms.Unknown -> {
-                pendingSmsDao.insert(PendingSms(body = body, receivedAt = receivedAt).asEntity())
-                SmsRecordResult.PENDING
+                if (!pendingSmsDao.existsByBody(body)) {
+                    pendingSmsDao.insert(PendingSms(body = body, receivedAt = receivedAt).asEntity())
+                }
+                RecordedSms(SmsRecordResult.PENDING)
             }
             is ParsedSms.Operation -> {
                 if (transactionDao.existsByReference(parsed.reference)) {
-                    SmsRecordResult.DUPLICATE
+                    RecordedSms(SmsRecordResult.DUPLICATE)
                 } else {
                     // solde du SMS d'avant, pour la regle des frais non preleves
                     val previous = transactionDao.lastSmsBefore(parsed.occurredAt.toEpochMillis())?.smsBalance
                     val transaction = SmsTransactionMapper.map(parsed, previous)
                     val id = transactionDao.insert(transaction.asEntity())
-                    if (id == -1L) SmsRecordResult.DUPLICATE else SmsRecordResult.ADDED
+                    if (id == -1L) {
+                        RecordedSms(SmsRecordResult.DUPLICATE)
+                    } else {
+                        RecordedSms(SmsRecordResult.ADDED, transaction.copy(id = id))
+                    }
                 }
             }
         }
@@ -79,7 +85,8 @@ class OfflineTransactionRepository(
         }
 
         val ids = transactionDao.insertAll(entities)
-        pendingSmsDao.insertAll(unknown.map { PendingSms(body = it.body, receivedAt = it.receivedAt).asEntity() })
+        val newUnknown = unknown.distinctBy { it.body }.filterNot { pendingSmsDao.existsByBody(it.body) }
+        pendingSmsDao.insertAll(newUnknown.map { PendingSms(body = it.body, receivedAt = it.receivedAt).asEntity() })
 
         val added = ids.count { it != -1L }
         return ImportReport(

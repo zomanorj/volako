@@ -1,5 +1,7 @@
 package mg.monargent.ui.home
 
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -18,6 +20,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -52,9 +55,22 @@ fun HomeScreen(viewModel: HomeViewModel = viewModel(factory = HomeViewModel.Fact
     val newCount by viewModel.newCount.collectAsStateWithLifecycle()
     val context = LocalContext.current
 
-    // a chaque retour dans l'app, on va chercher les nouveaux SMS
+    // a chaque retour dans l'app, on va chercher les nouveaux SMS (filet de securite
+    // si le recepteur a rate un SMS)
     LifecycleEventEffect(Lifecycle.Event.ON_RESUME) {
         if (SmsPermission.isGranted(context)) viewModel.sync()
+    }
+
+    // pour ceux qui ont fait l'accueil avant l'etape 4 : on demande une fois
+    // la reception des SMS et les notifications
+    val liveLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) {
+        viewModel.onLivePermissionsAsked()
+    }
+    LaunchedEffect(Unit) {
+        val missing = SmsPermission.missingLive(context)
+        if (SmsPermission.isGranted(context) && missing.isNotEmpty() && viewModel.shouldAskLivePermissions()) {
+            liveLauncher.launch(missing)
+        }
     }
 
     Surface(Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {

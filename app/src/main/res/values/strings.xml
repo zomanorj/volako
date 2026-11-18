@@ -34,4 +34,17 @@
     <string name="home_deposit">Dépôt</string>
     <string name="home_fee_suffix">+ %1$s de frais</string>
     <string name="home_new_operations">Nouvelles opérations : %1$d</string>
+
+    <!-- Notifications -->
+    <string name="notif_channel_name">Opérations MVola</string>
+    <string name="notif_channel_desc">Une notification à chaque opération MVola détectée</string>
+    <string name="notif_expense">−%1$s · %2$s</string>
+    <string name="notif_income">+%1$s · %2$s</string>
+    <string name="notif_withdrawal">Retrait de %1$s vers tes espèces</string>
+    <string name="notif_deposit">Dépôt de %1$s sur MVola</string>
+    <string name="notif_fee">Frais : %1$s</string>
+    <string name="notif_balance">Solde MVola : %1$s</string>
+    <string name="notif_credit">Crédit</string>
+    <string name="notif_payment">Envoi</string>
+    <string name="notif_received">Argent reçu</string>
 </resources>
