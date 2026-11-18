@@ -2,12 +2,14 @@ package mg.monargent.core.domain
 
 import mg.monargent.core.model.Account
 import mg.monargent.core.model.Category
+import mg.monargent.core.model.SmsReadMethod
 import mg.monargent.core.model.Transaction
 import mg.monargent.core.model.TransactionSource
 import mg.monargent.core.model.TransactionType
 import mg.monargent.core.sms.BalanceCheck
 import mg.monargent.core.sms.OperationKind
 import mg.monargent.core.sms.ParsedSms
+import mg.monargent.core.sms.SmsTemplates
 
 // Transforme une operation lue dans un SMS en ligne du carnet
 object SmsTransactionMapper {
@@ -38,14 +40,17 @@ object SmsTransactionMapper {
             occurredAt = op.occurredAt,
             source = TransactionSource.SMS,
             smsReference = op.reference,
-            smsBalance = op.balanceAfter,
+            // un modele appris peut ne pas avoir de solde
+            smsBalance = op.balanceAfter.takeIf { it != SmsTemplates.NO_BALANCE },
+            readBy = SmsReadMethod.valueOf(op.readBy.name),
         )
     }
 
     // Cas vu en vrai : le SMS annonce des frais mais le solde montre qu'ils n'ont pas ete preleves.
     // Le solde du SMS fait foi, donc on ne compte pas ces frais.
     private fun feeWasNotCharged(op: ParsedSms.Operation, previous: Long?): Boolean =
-        previous != null && op.fee > 0 && BalanceCheck.gap(previous, op) == op.fee
+        previous != null && op.fee > 0 && op.balanceAfter != SmsTemplates.NO_BALANCE &&
+            BalanceCheck.gap(previous, op) == op.fee
 
     // "Credit YAS" pour soi, "Credit YAS pour 0340000000" pour quelqu'un d'autre
     private fun creditLabel(op: ParsedSms.Operation): String? {

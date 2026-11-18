@@ -3,6 +3,8 @@ package mg.monargent.core.database.entity
 import mg.monargent.core.model.Category
 import mg.monargent.core.model.PendingSms
 import mg.monargent.core.model.Transaction
+import mg.monargent.core.sms.OperationKind
+import mg.monargent.core.sms.SmsTemplate
 import java.time.Instant
 import java.time.LocalDateTime
 import java.time.ZoneId
@@ -30,6 +32,7 @@ fun TransactionEntity.asModel() = Transaction(
     source = source,
     smsReference = smsReference,
     smsBalance = smsBalance,
+    readBy = readBy,
 )
 
 fun Transaction.asEntity() = TransactionEntity(
@@ -47,8 +50,38 @@ fun Transaction.asEntity() = TransactionEntity(
     source = source,
     smsReference = smsReference,
     smsBalance = smsBalance,
+    readBy = readBy,
 )
 
 fun PendingSmsEntity.asModel() = PendingSms(id = id, body = body, receivedAt = receivedAt.toLocalDateTime())
 
 fun PendingSms.asEntity() = PendingSmsEntity(id = id, body = body, receivedAt = receivedAt.toEpochMillis())
+
+private const val SEP = "\u001F"
+
+fun SmsTemplateEntity.asModel() = SmsTemplate(
+    id = id,
+    words = words.split(SEP),
+    numberCount = numberCount,
+    amountSlot = amountSlot,
+    feeSlot = feeSlot,
+    balanceSlot = balanceSlot,
+    referenceSlot = referenceSlot,
+    phoneSlot = phoneSlot,
+    kind = OperationKind.valueOf(kind),
+    label = label,
+)
+
+fun SmsTemplate.asEntity(createdAt: Long) = SmsTemplateEntity(
+    id = id,
+    words = words.joinToString(SEP),
+    numberCount = numberCount,
+    amountSlot = amountSlot,
+    feeSlot = feeSlot,
+    balanceSlot = balanceSlot,
+    referenceSlot = referenceSlot,
+    phoneSlot = phoneSlot,
+    kind = kind.name,
+    label = label,
+    createdAt = createdAt,
+)

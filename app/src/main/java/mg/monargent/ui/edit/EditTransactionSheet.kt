@@ -33,6 +33,7 @@ import mg.monargent.core.designsystem.component.LabelValueRow
 import mg.monargent.core.designsystem.component.formatAriary
 import mg.monargent.core.designsystem.theme.Spacing
 import mg.monargent.core.model.Category
+import mg.monargent.core.model.SmsReadMethod
 import mg.monargent.core.model.Transaction
 import mg.monargent.core.model.TransactionSource
 import mg.monargent.core.model.TransactionType
@@ -75,6 +76,15 @@ fun EditTransactionSheet(
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
+
+            // on dit comment le SMS a ete compris, pour que l'utilisateur sache quoi verifier
+            when (transaction.readBy) {
+                SmsReadMethod.TEMPLATE -> R.string.edit_read_template
+                SmsReadMethod.GENERIC -> R.string.edit_read_generic
+                else -> null
+            }?.let {
+                Text(stringResource(it), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.tertiary)
+            }
 
             if (isManual) {
                 OutlinedTextField(

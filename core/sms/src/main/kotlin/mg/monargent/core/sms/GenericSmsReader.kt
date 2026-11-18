@@ -92,7 +92,7 @@ object GenericSmsReader {
         RegexOption.IGNORE_CASE,
     )
     private val REFERENCE = Regex(
-        "\\b(?:ref|reference|id|transaction|trans id|txn)\\b\\s*(?:n°|no|:|#)?\\s*(\\d{6,})",
+        "\\b(?:ref|reference|id|transaction|trans id|txn|code)\\b\\s*(?:n°|no|:|#)?\\s*(\\d{6,})",
         RegexOption.IGNORE_CASE,
     )
     private val PHONE = Regex("(?<!\\d)(?:\\+?261|0)3\\d{8}(?!\\d)")

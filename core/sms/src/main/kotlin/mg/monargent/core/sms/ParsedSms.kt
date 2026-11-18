@@ -26,6 +26,8 @@ sealed interface ParsedSms {
         val counterpartyPhone: String? = null,
         val reason: String? = null,
         val operator: String? = null,
+        // regle exacte, modele appris ou lecteur universel
+        val readBy: ReadMethod = ReadMethod.EXACT,
     ) : ParsedSms {
 
         // De combien le solde MVola doit bouger avec cette operation

@@ -122,3 +122,29 @@ fun MonthCard(state: HomeUiState, onOpen: () -> Unit) {
         }
     }
 }
+
+// MVola a change ses SMS : on previent, l'app s'adapte toute seule
+@Composable
+fun FormatAlertCard(onDismiss: () -> Unit) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.tertiaryContainer),
+    ) {
+        Row(Modifier.padding(Spacing.lg), horizontalArrangement = Arrangement.spacedBy(Spacing.md)) {
+            IconBadge(DesignR.drawable.ic_autorenew, MaterialTheme.colorScheme.onTertiaryContainer)
+            Column(Modifier.weight(1f)) {
+                Text(
+                    stringResource(R.string.format_alert_title),
+                    style = MaterialTheme.typography.titleSmall,
+                    color = MaterialTheme.colorScheme.onTertiaryContainer,
+                )
+                Text(
+                    stringResource(R.string.format_alert_body),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onTertiaryContainer,
+                )
+                TextButton(onClick = onDismiss) { Text(stringResource(R.string.format_alert_ok)) }
+            }
+        }
+    }
+}

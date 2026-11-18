@@ -11,12 +11,12 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import mg.monargent.MonArgentApplication
+import mg.monargent.core.data.ClassifyChoice
 import mg.monargent.core.data.TransactionRepository
 import mg.monargent.core.data.UserPreferences
 import mg.monargent.core.domain.Ledger
 import mg.monargent.core.model.BalanceGap
 import mg.monargent.core.model.PendingSms
-import mg.monargent.core.model.TransactionType
 
 data class ReviewUiState(
     val pending: List<PendingSms> = emptyList(),
@@ -44,8 +44,8 @@ class ReviewViewModel(
         viewModelScope.launch { repository.dismissPendingSms(sms.id) }
     }
 
-    fun classify(sms: PendingSms, type: TransactionType, amount: Long, label: String) {
-        viewModelScope.launch { repository.classifyPendingSms(sms.id, type, amount, label) }
+    fun classify(sms: PendingSms, choice: ClassifyChoice, amount: Long, label: String) {
+        viewModelScope.launch { repository.classifyPendingSms(sms.id, choice, amount, label) }
     }
 
     fun acknowledge(gap: BalanceGap) {

@@ -4,6 +4,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import mg.monargent.core.database.dao.CounterpartyLabelDao
 import mg.monargent.core.database.dao.PendingSmsDao
+import mg.monargent.core.database.dao.SmsTemplateDao
 import mg.monargent.core.database.entity.CounterpartyLabelEntity
 import mg.monargent.core.database.dao.TransactionDao
 import mg.monargent.core.database.entity.asEntity
@@ -23,6 +24,8 @@ import mg.monargent.core.model.TransactionSource
 import mg.monargent.core.model.TransactionType
 import mg.monargent.core.sms.GenericSmsReader
 import mg.monargent.core.sms.MvolaSmsParser
+import mg.monargent.core.sms.OperationKind
+import mg.monargent.core.sms.SmsTemplates
 import mg.monargent.core.sms.ParsedSms
 import java.time.LocalDateTime
 import java.time.YearMonth
@@ -32,7 +35,10 @@ class OfflineTransactionRepository(
     private val transactionDao: TransactionDao,
     private val pendingSmsDao: PendingSmsDao,
     private val counterpartyLabelDao: CounterpartyLabelDao,
+    private val smsTemplateDao: SmsTemplateDao,
 ) : TransactionRepository {
+
+    private suspend fun templates() = smsTemplateDao.getAll().map { it.asModel() }
 
     override fun observeTransactions(): Flow<List<Transaction>> =
         transactionDao.observeAll().map { list -> list.map { it.asModel() } }
@@ -49,7 +55,7 @@ class OfflineTransactionRepository(
     override suspend fun recordSms(body: String, receivedAt: LocalDateTime): RecordedSms {
         // solde du dernier SMS avant celui-ci : sert a verifier un format inconnu
         val previousAtReception = transactionDao.lastSmsBefore(receivedAt.toEpochMillis())?.smsBalance
-        return when (val parsed = SmartSmsInterpreter.interpret(body, receivedAt, previousAtReception)) {
+        return when (val parsed = SmartSmsInterpreter.interpret(body, receivedAt, previousAtReception, templates())) {
             ParsedSms.Ignored -> RecordedSms(SmsRecordResult.IGNORED)
             is ParsedSms.Unknown -> {
                 if (!pendingSmsDao.existsByBody(body)) {
@@ -83,20 +89,21 @@ class OfflineTransactionRepository(
             when (val parsed = MvolaSmsParser.parse(sms.body, sms.receivedAt)) {
                 is ParsedSms.Operation -> operations += parsed
                 is ParsedSms.Unknown -> unknown += sms
-                // ignore par les regles exactes, mais il a un montant ET un solde : peut-etre
+                // ignore par les regles exactes, mais il a un montant en Ar : peut-etre
                 // un nouveau format (sans "Ref" par exemple), on laisse le lecteur universel essayer
-                ParsedSms.Ignored -> if (GenericSmsReader.read(sms.body)?.balance != null) unknown += sms else ignored++
+                ParsedSms.Ignored -> if (GenericSmsReader.read(sms.body) != null) unknown += sms else ignored++
             }
         }
 
         // les SMS inconnus : on essaie le lecteur universel, verifie par le solde du SMS d'avant.
         // On les traite dans l'ordre pour que deux nouveaux SMS a la suite se verifient entre eux.
         val stillUnknown = mutableListOf<RawSms>()
+        val templates = templates()
         for (sms in unknown.sortedBy { it.receivedAt }) {
             val previous = operations.filter { !it.occurredAt.isAfter(sms.receivedAt) }.maxByOrNull { it.occurredAt }
                 ?.balanceAfter
                 ?: transactionDao.lastSmsBefore(sms.receivedAt.toEpochMillis())?.smsBalance
-            when (val parsed = SmartSmsInterpreter.interpret(sms.body, sms.receivedAt, previous)) {
+            when (val parsed = SmartSmsInterpreter.interpret(sms.body, sms.receivedAt, previous, templates)) {
                 is ParsedSms.Operation -> operations += parsed
                 is ParsedSms.Unknown -> stillUnknown += sms
                 ParsedSms.Ignored -> ignored++
@@ -134,10 +141,12 @@ class OfflineTransactionRepository(
 
     override suspend fun reprocessPendingSms(): Int {
         var resolved = 0
-        for (pending in pendingSmsDao.getAll()) {
+        val templates = templates()
+        // du plus ancien au plus recent, pour que les soldes s'enchainent
+        for (pending in pendingSmsDao.getAll().sortedBy { it.receivedAt }) {
             val receivedAt = pending.receivedAt.toLocalDateTime()
             val previous = transactionDao.lastSmsBefore(pending.receivedAt)?.smsBalance
-            when (SmartSmsInterpreter.interpret(pending.body, receivedAt, previous)) {
+            when (SmartSmsInterpreter.interpret(pending.body, receivedAt, previous, templates)) {
                 is ParsedSms.Unknown -> Unit // toujours inconnu, on le laisse
                 else -> {
                     // maintenant reconnu (ou ignore) : on l'enregistre et on le retire de "A verifier"
@@ -163,21 +172,59 @@ class OfflineTransactionRepository(
         transactionDao.relabelByPhone(phone, label.trim())
     }
 
-    override suspend fun classifyPendingSms(pendingId: Long, type: TransactionType, amount: Long, label: String) {
+    override suspend fun classifyPendingSms(pendingId: Long, choice: ClassifyChoice, amount: Long, label: String) {
         val pending = pendingSmsDao.getById(pendingId) ?: return
-        val transaction = Transaction(
-            type = type,
-            amount = amount,
-            account = Account.MVOLA,
-            category = if (type == TransactionType.INCOME) Category.INCOME else Category.OTHER,
-            label = label.trim().ifEmpty { null },
-            // a la date du SMS : le solde MVola reste celui du dernier SMS reconnu
-            occurredAt = pending.receivedAt.toLocalDateTime(),
-            source = TransactionSource.MANUAL,
-        )
-        transactionDao.insert(transaction.asEntity())
+        val receivedAt = pending.receivedAt.toLocalDateTime()
+        val previous = transactionDao.lastSmsBefore(pending.receivedAt)?.smsBalance
+        val kind = kindFor(choice, pending.body)
+
+        // 1. on apprend la forme de ce SMS
+        val template = SmsTemplates.learn(pending.body, kind, amount, label, previous)
+        if (template != null) smsTemplateDao.insert(template.asEntity(System.currentTimeMillis()))
+
+        // 2. on le lit avec son modele : on garde ainsi la ref et le solde du SMS
+        val op = template?.let { SmsTemplates.match(it, pending.body, receivedAt) }?.takeIf { it.amount == amount }
+        if (op != null) {
+            transactionDao.insert(SmsTransactionMapper.map(op, previous).asEntity())
+        } else {
+            // le montant tape n'est pas dans le SMS : simple saisie a la main sur MVola
+            transactionDao.insert(manualFromChoice(choice, amount, label, receivedAt).asEntity())
+        }
         pendingSmsDao.delete(pendingId)
+
+        // 3. les autres SMS "a verifier" de la meme forme se rangent tout seuls
+        reprocessPendingSms()
     }
+
+    // le choix de l'utilisateur + les mots du SMS -> type precis (credit, depot...)
+    private fun kindFor(choice: ClassifyChoice, body: String): OperationKind {
+        val hint = GenericSmsReader.read(body)?.hint
+        return when (choice) {
+            ClassifyChoice.WITHDRAWAL -> OperationKind.WITHDRAWAL
+            ClassifyChoice.INCOME -> if (hint == OperationKind.DEPOSIT) OperationKind.DEPOSIT else OperationKind.RECEIVED
+            ClassifyChoice.EXPENSE -> if (hint == OperationKind.CREDIT_PURCHASE) OperationKind.CREDIT_PURCHASE else OperationKind.SENT
+        }
+    }
+
+    private fun manualFromChoice(choice: ClassifyChoice, amount: Long, label: String, at: LocalDateTime) = Transaction(
+        type = when (choice) {
+            ClassifyChoice.EXPENSE -> TransactionType.EXPENSE
+            ClassifyChoice.INCOME -> TransactionType.INCOME
+            ClassifyChoice.WITHDRAWAL -> TransactionType.TRANSFER
+        },
+        amount = amount,
+        account = Account.MVOLA,
+        toAccount = if (choice == ClassifyChoice.WITHDRAWAL) Account.CASH else null,
+        category = when (choice) {
+            ClassifyChoice.INCOME -> Category.INCOME
+            ClassifyChoice.WITHDRAWAL -> Category.TRANSFER
+            ClassifyChoice.EXPENSE -> Category.OTHER
+        },
+        label = label.trim().ifEmpty { null },
+        // a la date du SMS : le solde MVola reste celui du dernier SMS reconnu
+        occurredAt = at,
+        source = TransactionSource.MANUAL,
+    )
 
     // si l'utilisateur a deja nomme ce numero, on reprend son libelle
     private suspend fun withRememberedLabel(

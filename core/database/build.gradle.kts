@@ -24,6 +24,7 @@ room {
 
 dependencies {
     api(project(":core:model"))
+    api(project(":core:sms"))
     api(libs.androidx.room.runtime)
     implementation(libs.androidx.room.ktx)
     ksp(libs.androidx.room.compiler)

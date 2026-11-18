@@ -17,6 +17,7 @@ import mg.monargent.core.data.SmsImporter
 import mg.monargent.core.data.TransactionRepository
 import mg.monargent.core.data.UserPreferences
 import mg.monargent.core.domain.CashCount
+import mg.monargent.core.domain.FormatWatch
 import mg.monargent.core.domain.Ledger
 import mg.monargent.core.model.Balances
 import mg.monargent.core.model.MonthSummary
@@ -24,6 +25,7 @@ import mg.monargent.core.model.Transaction
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.YearMonth
+import java.time.ZoneId
 
 data class HomeUiState(
     val balances: Balances = Balances(0, 0),
@@ -32,6 +34,8 @@ data class HomeUiState(
     val days: List<Pair<LocalDate, List<Transaction>>> = emptyList(),
     val pendingCount: Int = 0,
     val gapCount: Int = 0,
+    // date du dernier SMS "nouveau format" pas encore vu par l'utilisateur (null = pas d'alerte)
+    val formatChangeAt: LocalDateTime? = null,
 )
 
 class HomeViewModel(
@@ -44,8 +48,11 @@ class HomeViewModel(
         repository.observeTransactions(),
         repository.observePendingSms(),
         preferences.acknowledgedGaps,
-    ) { transactions, pending, acknowledged ->
+        preferences.formatAlertSeenAt,
+    ) { transactions, pending, acknowledged, alertSeenAt ->
+        val change = FormatWatch.latestChange(transactions, pending, LocalDateTime.now())
         HomeUiState(
+            formatChangeAt = change?.takeIf { it.toEpochMillis() > alertSeenAt },
             balances = Ledger.balances(transactions),
             month = Ledger.monthSummary(transactions, YearMonth.now()),
             days = transactions.groupBy { it.occurredAt.toLocalDate() }.toList(),
@@ -66,6 +73,13 @@ class HomeViewModel(
             _isSyncing.value = false
         }
     }
+
+    fun dismissFormatAlert() {
+        val at = uiState.value.formatChangeAt ?: return
+        viewModelScope.launch { preferences.setFormatAlertSeenAt(at.toEpochMillis()) }
+    }
+
+    private fun LocalDateTime.toEpochMillis() = atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()
 
     // "Compter mon portefeuille" : on enregistre l'ecart entre l'app et la realite
     fun countCash(counted: Long) {

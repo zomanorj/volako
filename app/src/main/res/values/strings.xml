@@ -153,4 +153,13 @@
         <item quantity="other">Export terminé : %1$d opérations</item>
     </plurals>
     <string name="export_failed">L\'export a échoué</string>
+
+    <!-- Lecture adaptative (etape 2) -->
+    <string name="classify_withdrawal">Retrait</string>
+    <string name="classify_learn_note">L\'app retiendra ce type de SMS et lira seule les suivants.</string>
+    <string name="format_alert_title">MVola a changé le format de ses SMS</string>
+    <string name="format_alert_body">L\'app s\'adapte toute seule. Jette un œil aux prochaines opérations MVola pour vérifier.</string>
+    <string name="format_alert_ok">Compris</string>
+    <string name="edit_read_template">Lu grâce à un modèle appris de tes confirmations</string>
+    <string name="edit_read_generic">Lu par le lecteur universel et vérifié par le solde</string>
 </resources>

@@ -11,6 +11,7 @@ object DataModule {
             database.transactionDao(),
             database.pendingSmsDao(),
             database.counterpartyLabelDao(),
+            database.smsTemplateDao(),
         )
     }
 

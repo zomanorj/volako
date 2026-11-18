@@ -134,6 +134,10 @@ fun HomeScreen(
                 item { Text(stringResource(R.string.app_name), style = MaterialTheme.typography.headlineSmall) }
                 item { Spacer(Spacing.lg) }
                 item { BalancesCard(state, onCount = { showCount = true }) }
+                if (state.formatChangeAt != null) {
+                    item { Spacer(Spacing.md) }
+                    item { FormatAlertCard(onDismiss = viewModel::dismissFormatAlert) }
+                }
                 if (state.pendingCount > 0 || state.gapCount > 0) {
                     item { Spacer(Spacing.md) }
                     item { ReviewCard(state.pendingCount, state.gapCount, onOpenReview) }

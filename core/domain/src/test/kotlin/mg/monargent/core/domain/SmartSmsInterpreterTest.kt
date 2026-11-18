@@ -2,6 +2,8 @@ package mg.monargent.core.domain
 
 import mg.monargent.core.sms.OperationKind
 import mg.monargent.core.sms.ParsedSms
+import mg.monargent.core.sms.ReadMethod
+import mg.monargent.core.sms.SmsTemplates
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -79,6 +81,45 @@ class SmartSmsInterpreterTest {
     @Test
     fun `publicite avec un montant mais sans solde reste ignoree`() {
         assertEquals(ParsedSms.Ignored, read("Gagnez 1 000 000 Ar avec MVola ce mois-ci !", previous = 10_000))
+    }
+
+    // un format que meme le lecteur universel ne comprend pas bien : sans mot-cle de solde
+    private val weird = "Operation 3 000 Ar OK pour 0340000007. Disponible 7 000 Ar. Code 7777777"
+
+    @Test
+    fun `apres une confirmation, le meme type de SMS est lu par le modele`() {
+        assertTrue(read(weird, previous = 10_000) !is ParsedSms.Operation)
+
+        val template = SmsTemplates.learn(weird, OperationKind.SENT, amount = 3_000, label = "Paiement", previousBalance = 10_000)!!
+        val next = "Operation 1 500 Ar OK pour 0340000008. Disponible 5 500 Ar. Code 7777778"
+        val o = SmartSmsInterpreter.interpret(next, at, previousBalance = 7_000, templates = listOf(template))
+            as ParsedSms.Operation
+        assertEquals(ReadMethod.TEMPLATE, o.readBy)
+        assertEquals(1_500L, o.amount)
+        assertEquals("Paiement", o.reason)
+    }
+
+    @Test
+    fun `un modele dont le solde ne colle pas va dans A verifier`() {
+        val template = SmsTemplates.learn(weird, OperationKind.SENT, amount = 3_000, label = null, previousBalance = 10_000)!!
+        val next = "Operation 1 500 Ar OK pour 0340000008. Disponible 5 500 Ar. Code 7777778"
+        val r = SmartSmsInterpreter.interpret(next, at, previousBalance = 99_000, templates = listOf(template))
+        assertTrue(r is ParsedSms.Unknown)
+    }
+
+    @Test
+    fun `lecteur universel marque comme tel`() {
+        val o = read(
+            "YAS Money : paiement de 5 000 Ar chez SHOPRITE 0340000001. Cout : 50 Ar. Nouveau solde 25 950 Ar. ID 1234567",
+            previous = 31_000,
+        ) as ParsedSms.Operation
+        assertEquals(ReadMethod.GENERIC, o.readBy)
+    }
+
+    @Test
+    fun `format inconnu sans Ref ni solde connu n est jamais ignore en silence`() {
+        val r = read("Operation 3 000 Ar OK pour 0340000007. Disponible 7 000 Ar. Code 7777777", previous = 10_000)
+        assertTrue(r is ParsedSms.Unknown)
     }
 
     @Test

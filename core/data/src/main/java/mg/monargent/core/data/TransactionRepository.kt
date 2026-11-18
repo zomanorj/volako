@@ -40,8 +40,8 @@ interface TransactionRepository {
     // retenir un libelle pour un numero et l'appliquer a toutes ses operations
     suspend fun rememberCounterpartyLabel(phone: String, label: String)
 
-    // transformer un SMS "a verifier" en operation MVola tapee a la main
-    suspend fun classifyPendingSms(pendingId: Long, type: TransactionType, amount: Long, label: String)
+    // classer un SMS "a verifier" : l'app apprend sa forme pour lire seule les suivants
+    suspend fun classifyPendingSms(pendingId: Long, choice: ClassifyChoice, amount: Long, label: String)
 
     suspend fun delete(id: Long)
     suspend fun dismissPendingSms(id: Long)

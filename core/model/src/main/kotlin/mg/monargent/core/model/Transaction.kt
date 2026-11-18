@@ -24,6 +24,8 @@ data class Transaction(
     val smsReference: String? = null,
     // solde MVola annonce dans le SMS apres l'operation
     val smsBalance: Long? = null,
+    // pour un SMS : lu par une regle exacte, un modele appris ou le lecteur universel
+    val readBy: SmsReadMethod? = null,
 ) {
     init {
         require(amount >= 0 && fee >= 0) { "les montants doivent etre positifs" }

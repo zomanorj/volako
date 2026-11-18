@@ -5,6 +5,7 @@ import androidx.room.Entity
 import androidx.room.Index
 import androidx.room.PrimaryKey
 import mg.monargent.core.model.Account
+import mg.monargent.core.model.SmsReadMethod
 import mg.monargent.core.model.TransactionSource
 import mg.monargent.core.model.TransactionType
 
@@ -33,4 +34,6 @@ data class TransactionEntity(
     val source: TransactionSource,
     @ColumnInfo(name = "sms_reference") val smsReference: String?,
     @ColumnInfo(name = "sms_balance") val smsBalance: Long?,
+    // v3 : EXACT, TEMPLATE ou GENERIC (null pour une saisie a la main)
+    @ColumnInfo(name = "read_by") val readBy: SmsReadMethod? = null,
 )

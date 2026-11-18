@@ -30,6 +30,13 @@ class UserPreferences(private val context: Context) {
         context.dataStore.edit { it[LAST_SMS_DATE] = millis }
     }
 
+    // date (ms) de la derniere alerte "format change" vue par l'utilisateur
+    val formatAlertSeenAt: Flow<Long> = context.dataStore.data.map { it[FORMAT_ALERT_SEEN] ?: 0L }
+
+    suspend fun setFormatAlertSeenAt(millis: Long) {
+        context.dataStore.edit { it[FORMAT_ALERT_SEEN] = millis }
+    }
+
     // version du lecteur de SMS utilisee lors du dernier import complet
     suspend fun parserVersion(): Int = context.dataStore.data.first()[PARSER_VERSION] ?: 1
 
@@ -57,5 +64,6 @@ class UserPreferences(private val context: Context) {
         val LIVE_PERMS_ASKED = booleanPreferencesKey("live_permissions_asked")
         val ACK_GAPS = stringSetPreferencesKey("acknowledged_gaps")
         val PARSER_VERSION = intPreferencesKey("parser_version")
+        val FORMAT_ALERT_SEEN = longPreferencesKey("format_alert_seen_at")
     }
 }

@@ -22,7 +22,8 @@ App Android pour suivre son argent MVola et espèces. Les SMS MVola sont lus aut
 ```bash
 export JAVA_HOME=~/devtools/jdk17
 ./gradlew test          # tests rapides
-./gradlew :core:database:connectedDebugAndroidTest   # test de migration (sur le telephone)
+./gradlew :core:database:connectedDebugAndroidTest   # migrations de la base (sur le telephone)
+./gradlew :core:data:connectedDebugAndroidTest       # apprentissage des SMS de bout en bout (sur le telephone)
 ./gradlew assembleDebug
 # APK : app/build/outputs/apk/debug/app-debug.apk
 ```
@@ -33,6 +34,14 @@ Une fois le téléphone associé (Options de développement > Débogage sans fil
 tools/run_on_phone.sh            # retrouve tout seul le port du telephone
 tools/run_on_phone.sh IP:PORT    # ou en le donnant
 ```
+
+## Lecture des SMS (ordre)
+1. Règles exactes (`MvolaSmsParser`), formats connus.
+2. Modèles appris des confirmations de l'utilisateur (`SmsTemplates`).
+3. Lecteur universel (`GenericSmsReader`).
+
+Les niveaux 2 et 3 ne sont acceptés que si le solde du SMS colle (`SmartSmsInterpreter`), sinon le SMS va dans « À vérifier ».
+Quand on change la lecture : augmenter `MvolaSmsParser.VERSION`, l'app relit tout l'historique une fois.
 
 ## Ajouter une icône
 ```bash

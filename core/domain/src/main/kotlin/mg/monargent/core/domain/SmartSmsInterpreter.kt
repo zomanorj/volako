@@ -1,26 +1,51 @@
 package mg.monargent.core.domain
 
+import mg.monargent.core.sms.BalanceCheck
 import mg.monargent.core.sms.GenericSmsReader
 import mg.monargent.core.sms.MvolaSmsParser
 import mg.monargent.core.sms.OperationKind
 import mg.monargent.core.sms.ParsedSms
+import mg.monargent.core.sms.ReadMethod
 import mg.monargent.core.sms.SmsClues
+import mg.monargent.core.sms.SmsTemplate
+import mg.monargent.core.sms.SmsTemplates
 import java.time.LocalDateTime
 
 // Lit n'importe quel SMS MVola, meme si YAS change la formulation.
-// 1) regles exactes (formats connus)  2) sinon lecteur universel, MAIS seulement si le calcul
-// du solde confirme : ancien solde + mouvement = nouveau solde. Sinon -> "A verifier".
-// Comme ca l'app ne se trompe jamais en silence.
+// 1) regles exactes (formats connus)
+// 2) modeles appris des confirmations de l'utilisateur
+// 3) lecteur universel
+// Pour 2 et 3 : si le SMS donne un solde, il doit coller (ancien solde + mouvement = nouveau).
+// Sinon -> "A verifier". Comme ca l'app ne se trompe jamais en silence.
 object SmartSmsInterpreter {
 
-    fun interpret(body: String, receivedAt: LocalDateTime, previousBalance: Long?): ParsedSms {
+    fun interpret(
+        body: String,
+        receivedAt: LocalDateTime,
+        previousBalance: Long?,
+        templates: List<SmsTemplate> = emptyList(),
+    ): ParsedSms {
         val exact = MvolaSmsParser.parse(body, receivedAt)
         if (exact is ParsedSms.Operation) return exact
 
-        // pas de solde dans le SMS ou pas de solde d'avant : impossible de verifier, on ne devine pas
+        // un modele appris correspond ?
+        for (template in templates) {
+            val op = SmsTemplates.match(template, body, receivedAt) ?: continue
+            val hasBalance = op.balanceAfter != SmsTemplates.NO_BALANCE
+            // le modele dit ou sont les nombres, le solde confirme qu'on a bien lu
+            if (hasBalance && previousBalance != null && BalanceCheck.gap(previousBalance, op) != 0L) {
+                return ParsedSms.Unknown(body)
+            }
+            return op
+        }
+
+        // pas de solde dans le SMS ou pas de solde d'avant : impossible de verifier, on ne devine pas.
+        // Mais on n'ignore JAMAIS en silence un SMS qui ressemble a une operation : "A verifier"
         val clues = GenericSmsReader.read(body) ?: return exact
-        val balance = clues.balance ?: return exact
-        if (previousBalance == null || clues.amount <= 0) return exact
+        val balance = clues.balance
+        if (balance == null || previousBalance == null || clues.amount <= 0) {
+            return if (exact == ParsedSms.Ignored && looksLikeOperation(clues)) ParsedSms.Unknown(body) else exact
+        }
 
         val verified = verify(clues, balance - previousBalance) ?: return ParsedSms.Unknown(body)
         return ParsedSms.Operation(
@@ -32,8 +57,13 @@ object SmartSmsInterpreter {
             occurredAt = clues.occurredAt ?: receivedAt,
             counterpartyName = clues.name,
             counterpartyPhone = clues.phone,
+            readBy = ReadMethod.GENERIC,
         )
     }
+
+    // un montant + (une vraie reference, un numero ou un solde) = surement une operation.
+    // Une pub n'a en general qu'un montant ("Gagnez 1 000 000 Ar")
+    private fun looksLikeOperation(c: SmsClues) = c.balance != null || !c.referenceIsSynthetic || c.phone != null
 
     // retourne (type, frais) si les chiffres collent, sinon null
     private fun verify(c: SmsClues, delta: Long): Pair<OperationKind, Long>? {
