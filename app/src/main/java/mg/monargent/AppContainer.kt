@@ -1,6 +1,7 @@
 package mg.monargent
 
 import android.content.Context
+import mg.monargent.core.data.CsvFileExporter
 import mg.monargent.core.data.DataModule
 import mg.monargent.core.data.SmsImporter
 import mg.monargent.core.data.TransactionRepository
@@ -14,6 +15,8 @@ class AppContainer(context: Context) {
     val transactionRepository: TransactionRepository by lazy {
         DataModule.createTransactionRepository(context)
     }
+
+    val csvExporter by lazy { CsvFileExporter(context, transactionRepository) }
 
     val smsImporter: SmsImporter by lazy {
         DataModule.createSmsImporter(context, transactionRepository, preferences)

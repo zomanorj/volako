@@ -32,7 +32,7 @@ object SmsTransactionMapper {
             account = account,
             toAccount = toAccount,
             category = category,
-            label = op.reason ?: op.operator?.let { "Crédit $it" },
+            label = meaningfulReason(op.reason) ?: op.operator?.let { "Crédit $it" },
             counterpartyName = op.counterpartyName,
             counterpartyPhone = op.counterpartyPhone,
             occurredAt = op.occurredAt,
@@ -46,6 +46,10 @@ object SmsTransactionMapper {
     // Le solde du SMS fait foi, donc on ne compte pas ces frais.
     private fun feeWasNotCharged(op: ParsedSms.Operation, previous: Long?): Boolean =
         previous != null && op.fee > 0 && BalanceCheck.gap(previous, op) == op.fee
+
+    // une raison comme "37", "T" ou "78" ne dit rien : on prefere afficher le nom de la personne
+    fun meaningfulReason(reason: String?): String? =
+        reason?.trim()?.takeIf { r -> r.length >= 2 && r.any(Char::isLetter) }
 
     private data class Quad(val type: TransactionType, val account: Account, val to: Account?, val category: Category)
 }

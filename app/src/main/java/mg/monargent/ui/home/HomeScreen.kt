@@ -56,6 +56,7 @@ import mg.monargent.core.designsystem.R as DesignR
 @Composable
 fun HomeScreen(
     onOpenReview: () -> Unit,
+    onOpenMonth: () -> Unit,
     viewModel: HomeViewModel = viewModel(factory = HomeViewModel.Factory),
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
@@ -142,7 +143,7 @@ fun HomeScreen(
                     item { NegativeCashCard(state.balances.cash, onCount = { showCount = true }) }
                 }
                 item { Spacer(Spacing.md) }
-                item { MonthCard(state) }
+                item { MonthCard(state, onOpen = onOpenMonth) }
 
                 if (state.days.isEmpty()) {
                     item {

@@ -34,9 +34,11 @@ import mg.monargent.core.designsystem.component.formatAriary
 import mg.monargent.core.designsystem.theme.AmountTextStyle
 import mg.monargent.core.designsystem.theme.MonArgentTheme
 import mg.monargent.core.designsystem.theme.Spacing
+import mg.monargent.core.domain.SmsTransactionMapper
 import mg.monargent.core.model.Account
 import mg.monargent.core.model.Category
 import mg.monargent.core.model.Transaction
+import mg.monargent.core.model.TransactionSource
 import mg.monargent.core.model.TransactionType
 import java.time.format.DateTimeFormatter
 import mg.monargent.core.designsystem.R as DesignR
@@ -84,6 +86,8 @@ fun SwipeableTransactionRow(
 
 @Composable
 private fun SwipeBackground(direction: SwipeToDismissBoxValue) {
+    // rien a dessiner au repos (sinon la couleur deborde sur les coins arrondis)
+    if (direction == SwipeToDismissBoxValue.Settled) return
     val (color, icon, label, alignment) = when (direction) {
         SwipeToDismissBoxValue.EndToStart -> Quad(
             MaterialTheme.colorScheme.errorContainer, DesignR.drawable.ic_delete, R.string.home_swipe_delete, Alignment.CenterEnd,
@@ -118,6 +122,8 @@ fun TransactionRow(t: Transaction, modifier: Modifier = Modifier) {
         t.category == Category.UNTRACKED -> stringResource(
             if (t.type == TransactionType.INCOME) R.string.home_untracked_income else R.string.home_untracked_expense,
         )
+        // pour les anciens SMS deja enregistres avec une raison comme "37"
+        t.source == TransactionSource.SMS -> SmsTransactionMapper.meaningfulReason(t.label) ?: t.counterpartyName ?: "—"
         else -> t.label ?: t.counterpartyName ?: "—"
     }
     // sous-titre : la personne (si le titre est deja un libelle) + l'heure

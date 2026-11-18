@@ -99,10 +99,12 @@ fun NegativeCashCard(cash: Long, onCount: () -> Unit) {
     }
 }
 
+// toucher la carte ouvre le resume complet du mois
 @Composable
-fun MonthCard(state: HomeUiState) {
+fun MonthCard(state: HomeUiState, onOpen: () -> Unit) {
     val f = MonArgentTheme.finance
     Card(
+        onClick = onOpen,
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow),
     ) {
@@ -113,6 +115,10 @@ fun MonthCard(state: HomeUiState) {
             HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
             LabelValueRow(stringResource(R.string.home_credit), formatAriary(state.month.credit), valueColor = f.leak)
             LabelValueRow(stringResource(R.string.home_fees), formatAriary(state.month.fees), valueColor = f.leak)
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End, verticalAlignment = Alignment.CenterVertically) {
+                Text(stringResource(R.string.month_open), style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
+                Icon(painterResource(DesignR.drawable.ic_chevron_right), null, tint = MaterialTheme.colorScheme.primary)
+            }
         }
     }
 }

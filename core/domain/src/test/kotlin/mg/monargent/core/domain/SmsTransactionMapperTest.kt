@@ -72,6 +72,20 @@ class SmsTransactionMapperTest {
     }
 
     @Test
+    fun `raison sans sens comme 37 ou T est ignoree`() {
+        val recu = SmsTransactionMapper.map(
+            op("200 000 Ar recu de A 0340000001 le 16/11/26 a 07:39. Raison: 37. Solde: 200 388 Ar. Ref 2"),
+            previousSmsBalance = 388,
+        )
+        assertNull(recu.label)
+        val envoi = SmsTransactionMapper.map(
+            op("203 400 Ar envoye a D (0340000005) le 10/02/26 a 14:20. Frais: 1 900 Ar. Raison: T. Solde : 1 833 950 Ar. Ref: 6"),
+            previousSmsBalance = 2_039_250,
+        )
+        assertNull(envoi.label)
+    }
+
+    @Test
     fun `argent recu sans raison n a pas de libelle`() {
         val t = SmsTransactionMapper.map(
             op("5 000 Ar recu de Soa 0340000006 le 01/12/26 a 08:00. Solde: 15 000 Ar. Ref: 9"),
