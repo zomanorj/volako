@@ -1,0 +1,8 @@
+<resources>
+    <string name="app_name">Mon Argent</string>
+    <string name="home_total_label">Total disponible</string>
+    <string name="account_mvola">MVola</string>
+    <string name="account_cash">Espèces</string>
+    <string name="setup_title">Installation réussie</string>
+    <string name="setup_body">La base de l\'app est prête. Prochaine étape : lire tes SMS MVola.</string>
+</resources>
