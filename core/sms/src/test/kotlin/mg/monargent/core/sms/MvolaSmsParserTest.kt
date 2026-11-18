@@ -108,6 +108,12 @@ class MvolaSmsParserTest {
     }
 
     @Test
+    fun `premier montant d un SMS inconnu`() {
+        assertEquals(31_300L, MvolaSmsParser.firstAmount("Vous avez transfere 31 300 Ar a Soa. Solde : 2 650 Ar"))
+        assertNull(MvolaSmsParser.firstAmount("Utilisez l'App MVola"))
+    }
+
+    @Test
     fun `expediteur MVola reconnu`() {
         assertTrue(MvolaSmsParser.isFromMvola("MVola"))
         assertTrue(MvolaSmsParser.isFromMvola("MVOLA"))

@@ -7,7 +7,11 @@ import mg.monargent.core.database.MonArgentDatabase
 object DataModule {
     fun createTransactionRepository(context: Context): TransactionRepository {
         val database = MonArgentDatabase.create(context)
-        return OfflineTransactionRepository(database.transactionDao(), database.pendingSmsDao())
+        return OfflineTransactionRepository(
+            database.transactionDao(),
+            database.pendingSmsDao(),
+            database.counterpartyLabelDao(),
+        )
     }
 
     fun createSmsImporter(

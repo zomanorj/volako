@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.longPreferencesKey
+import androidx.datastore.preferences.core.stringSetPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
@@ -35,9 +36,17 @@ class UserPreferences(private val context: Context) {
         context.dataStore.edit { it[LIVE_PERMS_ASKED] = true }
     }
 
+    // ecarts de solde que l'utilisateur a deja vus ("Compris")
+    val acknowledgedGaps: Flow<Set<String>> = context.dataStore.data.map { it[ACK_GAPS].orEmpty() }
+
+    suspend fun acknowledgeGap(key: String) {
+        context.dataStore.edit { it[ACK_GAPS] = it[ACK_GAPS].orEmpty() + key }
+    }
+
     private companion object {
         val ONBOARDING_DONE = booleanPreferencesKey("onboarding_done")
         val LAST_SMS_DATE = longPreferencesKey("last_imported_sms_date")
         val LIVE_PERMS_ASKED = booleanPreferencesKey("live_permissions_asked")
+        val ACK_GAPS = stringSetPreferencesKey("acknowledged_gaps")
     }
 }

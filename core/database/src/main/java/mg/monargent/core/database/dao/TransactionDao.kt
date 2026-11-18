@@ -4,6 +4,7 @@ import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
+import androidx.room.Update
 import kotlinx.coroutines.flow.Flow
 import mg.monargent.core.database.entity.TransactionEntity
 import mg.monargent.core.model.TransactionType
@@ -46,6 +47,13 @@ interface TransactionDao {
         """,
     )
     fun observeFrequentLabels(type: TransactionType, limit: Int): Flow<List<String>>
+
+    @Update
+    suspend fun update(transaction: TransactionEntity)
+
+    // applique un libelle a toutes les operations SMS avec ce numero (sauf retraits/depots)
+    @Query("UPDATE transactions SET label = :label WHERE counterparty_phone = :phone AND type != 'TRANSFER'")
+    suspend fun relabelByPhone(phone: String, label: String)
 
     @Query("DELETE FROM transactions WHERE id = :id")
     suspend fun delete(id: Long)

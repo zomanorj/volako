@@ -28,6 +28,18 @@ interface TransactionRepository {
 
     // retourne l'id, pour pouvoir annuler
     suspend fun addManual(transaction: Transaction): Long
+    // modifier une operation (libelle, montant d'une saisie manuelle...)
+    suspend fun update(transaction: Transaction)
+
+    // remettre une operation supprimee (bouton "Annuler")
+    suspend fun restore(transaction: Transaction)
+
+    // retenir un libelle pour un numero et l'appliquer a toutes ses operations
+    suspend fun rememberCounterpartyLabel(phone: String, label: String)
+
+    // transformer un SMS "a verifier" en operation MVola tapee a la main
+    suspend fun classifyPendingSms(pendingId: Long, type: TransactionType, amount: Long, label: String)
+
     suspend fun delete(id: Long)
     suspend fun dismissPendingSms(id: Long)
 }

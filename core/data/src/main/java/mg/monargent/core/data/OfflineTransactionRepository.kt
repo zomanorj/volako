@@ -2,14 +2,19 @@ package mg.monargent.core.data
 
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import mg.monargent.core.database.dao.CounterpartyLabelDao
 import mg.monargent.core.database.dao.PendingSmsDao
+import mg.monargent.core.database.entity.CounterpartyLabelEntity
 import mg.monargent.core.database.dao.TransactionDao
 import mg.monargent.core.database.entity.asEntity
 import mg.monargent.core.database.entity.asModel
 import mg.monargent.core.database.entity.toEpochMillis
+import mg.monargent.core.database.entity.toLocalDateTime
 import mg.monargent.core.domain.Ledger
 import mg.monargent.core.domain.SmsTransactionMapper
+import mg.monargent.core.model.Account
 import mg.monargent.core.model.Balances
+import mg.monargent.core.model.Category
 import mg.monargent.core.model.MonthSummary
 import mg.monargent.core.model.PendingSms
 import mg.monargent.core.model.Transaction
@@ -24,6 +29,7 @@ import java.time.YearMonth
 class OfflineTransactionRepository(
     private val transactionDao: TransactionDao,
     private val pendingSmsDao: PendingSmsDao,
+    private val counterpartyLabelDao: CounterpartyLabelDao,
 ) : TransactionRepository {
 
     override fun observeTransactions(): Flow<List<Transaction>> =
@@ -53,7 +59,7 @@ class OfflineTransactionRepository(
                 } else {
                     // solde du SMS d'avant, pour la regle des frais non preleves
                     val previous = transactionDao.lastSmsBefore(parsed.occurredAt.toEpochMillis())?.smsBalance
-                    val transaction = SmsTransactionMapper.map(parsed, previous)
+                    val transaction = withRememberedLabel(SmsTransactionMapper.map(parsed, previous))
                     val id = transactionDao.insert(transaction.asEntity())
                     if (id == -1L) {
                         RecordedSms(SmsRecordResult.DUPLICATE)
@@ -81,8 +87,10 @@ class OfflineTransactionRepository(
         var previous = operations.firstOrNull()?.let {
             transactionDao.lastSmsBefore(it.occurredAt.toEpochMillis())?.smsBalance
         }
+        val rules = counterpartyLabelDao.getAll().associate { it.phone to it.label }
         val entities = operations.map { op ->
-            SmsTransactionMapper.map(op, previous).also { previous = op.balanceAfter }.asEntity()
+            val transaction = SmsTransactionMapper.map(op, previous).also { previous = op.balanceAfter }
+            withRememberedLabel(transaction, rules).asEntity()
         }
 
         val ids = transactionDao.insertAll(entities)
@@ -103,6 +111,44 @@ class OfflineTransactionRepository(
 
     override suspend fun addManual(transaction: Transaction): Long =
         transactionDao.insert(transaction.copy(id = 0, source = TransactionSource.MANUAL).asEntity())
+
+    override suspend fun update(transaction: Transaction) = transactionDao.update(transaction.asEntity())
+
+    override suspend fun restore(transaction: Transaction) {
+        transactionDao.insert(transaction.asEntity())
+    }
+
+    override suspend fun rememberCounterpartyLabel(phone: String, label: String) {
+        counterpartyLabelDao.upsert(CounterpartyLabelEntity(phone, label.trim()))
+        transactionDao.relabelByPhone(phone, label.trim())
+    }
+
+    override suspend fun classifyPendingSms(pendingId: Long, type: TransactionType, amount: Long, label: String) {
+        val pending = pendingSmsDao.getById(pendingId) ?: return
+        val transaction = Transaction(
+            type = type,
+            amount = amount,
+            account = Account.MVOLA,
+            category = if (type == TransactionType.INCOME) Category.INCOME else Category.OTHER,
+            label = label.trim().ifEmpty { null },
+            // a la date du SMS : le solde MVola reste celui du dernier SMS reconnu
+            occurredAt = pending.receivedAt.toLocalDateTime(),
+            source = TransactionSource.MANUAL,
+        )
+        transactionDao.insert(transaction.asEntity())
+        pendingSmsDao.delete(pendingId)
+    }
+
+    // si l'utilisateur a deja nomme ce numero, on reprend son libelle
+    private suspend fun withRememberedLabel(
+        transaction: Transaction,
+        rules: Map<String, String>? = null,
+    ): Transaction {
+        val phone = transaction.counterpartyPhone ?: return transaction
+        if (transaction.type == TransactionType.TRANSFER) return transaction
+        val label = rules?.get(phone) ?: counterpartyLabelDao.labelFor(phone) ?: return transaction
+        return transaction.copy(label = label)
+    }
 
     override suspend fun delete(id: Long) = transactionDao.delete(id)
 

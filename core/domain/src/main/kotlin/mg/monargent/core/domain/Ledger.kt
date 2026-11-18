@@ -1,6 +1,7 @@
 package mg.monargent.core.domain
 
 import mg.monargent.core.model.Account
+import mg.monargent.core.model.BalanceGap
 import mg.monargent.core.model.Balances
 import mg.monargent.core.model.Category
 import mg.monargent.core.model.MonthSummary
@@ -49,12 +50,11 @@ object Ledger {
     }
 
     // Les SMS dont le solde ne colle pas avec le SMS d'avant -> il manque probablement un SMS
-    // Retourne l'ecart en Ariary pour chaque operation concernee
-    fun balanceGaps(transactions: List<Transaction>): List<Pair<Transaction, Long>> {
+    fun balanceGaps(transactions: List<Transaction>): List<BalanceGap> {
         val sms = transactions.filter { it.smsBalance != null }.sortedWith(chronological)
         return sms.zipWithNext().mapNotNull { (before, after) ->
             val gap = after.smsBalance!! - (before.smsBalance!! + after.effectOn(Account.MVOLA))
-            if (gap != 0L) after to gap else null
+            if (gap != 0L) BalanceGap(before, after, gap) else null
         }
     }
 }

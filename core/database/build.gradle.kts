@@ -10,7 +10,11 @@ android {
 
     defaultConfig {
         minSdk = libs.versions.minSdk.get().toInt()
+        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
+
+    // les tests de migration lisent les schemas exportes
+    sourceSets.getByName("androidTest").assets.directories.add("$projectDir/schemas")
 }
 
 // on garde le schema de la base dans git pour pouvoir faire des migrations propres
@@ -23,4 +27,8 @@ dependencies {
     api(libs.androidx.room.runtime)
     implementation(libs.androidx.room.ktx)
     ksp(libs.androidx.room.compiler)
+
+    androidTestImplementation(libs.androidx.room.testing)
+    androidTestImplementation(libs.androidx.test.runner)
+    androidTestImplementation(libs.androidx.test.ext.junit)
 }

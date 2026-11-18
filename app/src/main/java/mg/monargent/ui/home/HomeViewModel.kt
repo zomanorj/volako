@@ -21,13 +21,15 @@ import mg.monargent.core.domain.Ledger
 import mg.monargent.core.model.Balances
 import mg.monargent.core.model.MonthSummary
 import mg.monargent.core.model.Transaction
+import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.YearMonth
 
 data class HomeUiState(
     val balances: Balances = Balances(0, 0),
     val month: MonthSummary = MonthSummary(YearMonth.now(), 0, 0, 0, 0),
-    val transactions: List<Transaction> = emptyList(),
+    // operations groupees par jour, du plus recent au plus ancien
+    val days: List<Pair<LocalDate, List<Transaction>>> = emptyList(),
     val pendingCount: Int = 0,
     val gapCount: Int = 0,
 )
@@ -41,29 +43,26 @@ class HomeViewModel(
     val uiState: StateFlow<HomeUiState> = combine(
         repository.observeTransactions(),
         repository.observePendingSms(),
-    ) { transactions, pending ->
+        preferences.acknowledgedGaps,
+    ) { transactions, pending, acknowledged ->
         HomeUiState(
             balances = Ledger.balances(transactions),
             month = Ledger.monthSummary(transactions, YearMonth.now()),
-            transactions = transactions,
+            days = transactions.groupBy { it.occurredAt.toLocalDate() }.toList(),
             pendingCount = pending.size,
-            gapCount = Ledger.balanceGaps(transactions).size,
+            gapCount = Ledger.balanceGaps(transactions).count { it.key !in acknowledged },
         )
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), HomeUiState())
 
     private val _isSyncing = MutableStateFlow(false)
     val isSyncing: StateFlow<Boolean> = _isSyncing.asStateFlow()
 
-    // nombre d'operations ajoutees par la derniere synchro (pour un petit message)
-    private val _newCount = MutableStateFlow(0)
-    val newCount: StateFlow<Int> = _newCount.asStateFlow()
-
     // relit les nouveaux SMS MVola (appele a chaque fois que l'app revient au premier plan)
     fun sync() {
         if (_isSyncing.value) return
         viewModelScope.launch {
             _isSyncing.value = true
-            runCatching { importer.importNew() }.onSuccess { _newCount.value = it.added }
+            runCatching { importer.importNew() }
             _isSyncing.value = false
         }
     }
@@ -74,9 +73,24 @@ class HomeViewModel(
         viewModelScope.launch { repository.addManual(adjustment) }
     }
 
-    // pour le bouton "Annuler" apres une saisie
     fun delete(id: Long) {
         viewModelScope.launch { repository.delete(id) }
+    }
+
+    fun restore(transaction: Transaction) {
+        viewModelScope.launch { repository.restore(transaction) }
+    }
+
+    // rememberForPhone : appliquer ce libelle a toutes les operations de ce numero
+    fun update(transaction: Transaction, rememberForPhone: Boolean) {
+        viewModelScope.launch {
+            val phone = transaction.counterpartyPhone
+            val label = transaction.label
+            repository.update(transaction)
+            if (rememberForPhone && phone != null && !label.isNullOrBlank()) {
+                repository.rememberCounterpartyLabel(phone, label)
+            }
+        }
     }
 
     // vrai la 1re fois seulement : l'ecran demande alors les permissions "en direct"

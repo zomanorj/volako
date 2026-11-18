@@ -24,6 +24,7 @@ object MvolaSmsParser {
     private val ACCENTS = Regex("\\p{Mn}+")
     private val SPACES = Regex("[\\s\\u00A0\\u202F]+")
     private val PART_PREFIX = Regex("^(\\d)/(\\d) ")
+    private val FIRST_AMOUNT = Regex("(\\d{1,3}(?: \\d{3})*) ?Ar\\b", RegexOption.IGNORE_CASE)
     private val LOOKS_LIKE_OPERATION = Regex("\\d Ar\\b.*\\bRef\\b", RegexOption.IGNORE_CASE)
 
     fun isFromMvola(address: String?): Boolean = address.equals(SENDER, ignoreCase = true)
@@ -49,6 +50,10 @@ object MvolaSmsParser {
             ParsedSms.Ignored
         }
     }
+
+    // premier montant "xxx Ar" du texte, pour pre-remplir le classement d'un SMS inconnu
+    fun firstAmount(body: String): Long? =
+        FIRST_AMOUNT.find(normalize(body))?.groupValues?.get(1)?.let(::toLong)
 
     // ---- normalisation ----
 

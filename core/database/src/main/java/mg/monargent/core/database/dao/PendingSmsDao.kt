@@ -23,6 +23,9 @@ interface PendingSmsDao {
     @Query("SELECT EXISTS(SELECT 1 FROM pending_sms WHERE body = :body)")
     suspend fun existsByBody(body: String): Boolean
 
+    @Query("SELECT * FROM pending_sms WHERE id = :id")
+    suspend fun getById(id: Long): PendingSmsEntity?
+
     @Query("DELETE FROM pending_sms WHERE id = :id")
     suspend fun delete(id: Long)
 }

@@ -9,7 +9,7 @@ import androidx.compose.runtime.getValue
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import mg.monargent.core.designsystem.theme.MonArgentTheme
-import mg.monargent.ui.home.HomeScreen
+import mg.monargent.ui.navigation.AppNavigation
 import mg.monargent.ui.onboarding.OnboardingScreen
 
 class MainActivity : ComponentActivity() {
@@ -30,7 +30,7 @@ class MainActivity : ComponentActivity() {
                 when (onboardingDone) {
                     null -> Unit
                     false -> OnboardingScreen()
-                    true -> HomeScreen()
+                    true -> AppNavigation()
                 }
             }
         }

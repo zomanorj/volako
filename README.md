@@ -22,6 +22,7 @@ App Android pour suivre son argent MVola et espèces. Les SMS MVola sont lus aut
 ```bash
 export JAVA_HOME=~/devtools/jdk17
 ./gradlew test          # tests rapides
+./gradlew :core:database:connectedDebugAndroidTest   # test de migration (sur le telephone)
 ./gradlew assembleDebug
 # APK : app/build/outputs/apk/debug/app-debug.apk
 ```

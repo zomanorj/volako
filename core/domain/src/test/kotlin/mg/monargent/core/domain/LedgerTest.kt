@@ -72,7 +72,8 @@ class LedgerTest {
         )
         val gaps = Ledger.balanceGaps(withHole)
         assertEquals(1, gaps.size)
-        assertEquals(-1_500L, gaps.first().second)
+        assertEquals(-1_500L, gaps.first().amount)
+        assertEquals("8-9", gaps.first().key)
     }
 
     @Test
