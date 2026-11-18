@@ -13,7 +13,8 @@ object MvolaSmsParser {
 
     // a augmenter a chaque nouveau format reconnu : l'app relit alors tout l'historique une fois
     // v2 : achat de credit pour un autre numero (avec frais)
-    const val VERSION = 2
+    // v3 : lecteur universel verifie par le solde (GenericSmsReader + SmartSmsInterpreter)
+    const val VERSION = 3
 
     // ---- morceaux de regex (declares en premier car les regles les utilisent) ----
 

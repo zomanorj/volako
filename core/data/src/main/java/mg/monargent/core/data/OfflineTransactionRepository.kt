@@ -11,6 +11,7 @@ import mg.monargent.core.database.entity.asModel
 import mg.monargent.core.database.entity.toEpochMillis
 import mg.monargent.core.database.entity.toLocalDateTime
 import mg.monargent.core.domain.Ledger
+import mg.monargent.core.domain.SmartSmsInterpreter
 import mg.monargent.core.domain.SmsTransactionMapper
 import mg.monargent.core.model.Account
 import mg.monargent.core.model.Balances
@@ -20,6 +21,7 @@ import mg.monargent.core.model.PendingSms
 import mg.monargent.core.model.Transaction
 import mg.monargent.core.model.TransactionSource
 import mg.monargent.core.model.TransactionType
+import mg.monargent.core.sms.GenericSmsReader
 import mg.monargent.core.sms.MvolaSmsParser
 import mg.monargent.core.sms.ParsedSms
 import java.time.LocalDateTime
@@ -44,8 +46,10 @@ class OfflineTransactionRepository(
     override fun observePendingSms(): Flow<List<PendingSms>> =
         pendingSmsDao.observeAll().map { list -> list.map { it.asModel() } }
 
-    override suspend fun recordSms(body: String, receivedAt: LocalDateTime): RecordedSms =
-        when (val parsed = MvolaSmsParser.parse(body, receivedAt)) {
+    override suspend fun recordSms(body: String, receivedAt: LocalDateTime): RecordedSms {
+        // solde du dernier SMS avant celui-ci : sert a verifier un format inconnu
+        val previousAtReception = transactionDao.lastSmsBefore(receivedAt.toEpochMillis())?.smsBalance
+        return when (val parsed = SmartSmsInterpreter.interpret(body, receivedAt, previousAtReception)) {
             ParsedSms.Ignored -> RecordedSms(SmsRecordResult.IGNORED)
             is ParsedSms.Unknown -> {
                 if (!pendingSmsDao.existsByBody(body)) {
@@ -69,6 +73,7 @@ class OfflineTransactionRepository(
                 }
             }
         }
+    }
 
     override suspend fun importSms(messages: List<RawSms>): ImportReport {
         val operations = mutableListOf<ParsedSms.Operation>()
@@ -78,9 +83,27 @@ class OfflineTransactionRepository(
             when (val parsed = MvolaSmsParser.parse(sms.body, sms.receivedAt)) {
                 is ParsedSms.Operation -> operations += parsed
                 is ParsedSms.Unknown -> unknown += sms
+                // ignore par les regles exactes, mais il a un montant ET un solde : peut-etre
+                // un nouveau format (sans "Ref" par exemple), on laisse le lecteur universel essayer
+                ParsedSms.Ignored -> if (GenericSmsReader.read(sms.body)?.balance != null) unknown += sms else ignored++
+            }
+        }
+
+        // les SMS inconnus : on essaie le lecteur universel, verifie par le solde du SMS d'avant.
+        // On les traite dans l'ordre pour que deux nouveaux SMS a la suite se verifient entre eux.
+        val stillUnknown = mutableListOf<RawSms>()
+        for (sms in unknown.sortedBy { it.receivedAt }) {
+            val previous = operations.filter { !it.occurredAt.isAfter(sms.receivedAt) }.maxByOrNull { it.occurredAt }
+                ?.balanceAfter
+                ?: transactionDao.lastSmsBefore(sms.receivedAt.toEpochMillis())?.smsBalance
+            when (val parsed = SmartSmsInterpreter.interpret(sms.body, sms.receivedAt, previous)) {
+                is ParsedSms.Operation -> operations += parsed
+                is ParsedSms.Unknown -> stillUnknown += sms
                 ParsedSms.Ignored -> ignored++
             }
         }
+        unknown.clear()
+        unknown += stillUnknown
 
         // ordre chronologique pour enchainer les soldes (meme tri que Ledger)
         operations.sortWith(compareBy({ it.occurredAt }, { it.reference.toLongOrNull() ?: Long.MAX_VALUE }))
@@ -113,7 +136,8 @@ class OfflineTransactionRepository(
         var resolved = 0
         for (pending in pendingSmsDao.getAll()) {
             val receivedAt = pending.receivedAt.toLocalDateTime()
-            when (MvolaSmsParser.parse(pending.body, receivedAt)) {
+            val previous = transactionDao.lastSmsBefore(pending.receivedAt)?.smsBalance
+            when (SmartSmsInterpreter.interpret(pending.body, receivedAt, previous)) {
                 is ParsedSms.Unknown -> Unit // toujours inconnu, on le laisse
                 else -> {
                     // maintenant reconnu (ou ignore) : on l'enregistre et on le retire de "A verifier"

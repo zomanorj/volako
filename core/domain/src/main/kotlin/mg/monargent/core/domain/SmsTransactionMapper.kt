@@ -49,8 +49,9 @@ object SmsTransactionMapper {
 
     // "Credit YAS" pour soi, "Credit YAS pour 0340000000" pour quelqu'un d'autre
     private fun creditLabel(op: ParsedSms.Operation): String? {
-        val operator = op.operator ?: return null
-        return op.counterpartyPhone?.let { "Crédit $operator pour $it" } ?: "Crédit $operator"
+        if (op.kind != OperationKind.CREDIT_PURCHASE) return null
+        val name = listOfNotNull("Crédit", op.operator).joinToString(" ")
+        return op.counterpartyPhone?.let { "$name pour $it" } ?: name
     }
 
     // une raison comme "37", "T" ou "78" ne dit rien : on prefere afficher le nom de la personne

@@ -14,6 +14,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
@@ -24,7 +25,9 @@ import mg.monargent.R
 import mg.monargent.core.designsystem.theme.Spacing
 import mg.monargent.core.model.PendingSms
 import mg.monargent.core.model.TransactionType
+import mg.monargent.core.sms.GenericSmsReader
 import mg.monargent.core.sms.MvolaSmsParser
+import mg.monargent.core.sms.OperationKind
 
 // Transformer un SMS non reconnu en operation MVola : type, montant (pre-rempli), libelle
 @Composable
@@ -33,9 +36,17 @@ fun ClassifyDialog(
     onConfirm: (TransactionType, Long, String) -> Unit,
     onDismiss: () -> Unit,
 ) {
-    var type by rememberSaveable { mutableStateOf(TransactionType.EXPENSE) }
-    var amountText by rememberSaveable { mutableStateOf(MvolaSmsParser.firstAmount(sms.body)?.toString().orEmpty()) }
-    var label by rememberSaveable { mutableStateOf("") }
+    // proposition du lecteur universel (montant, sens, personne) : il reste a confirmer
+    val clues = remember(sms.body) { GenericSmsReader.read(sms.body) }
+    val suggestedType = when (clues?.hint) {
+        OperationKind.RECEIVED, OperationKind.DEPOSIT -> TransactionType.INCOME
+        else -> TransactionType.EXPENSE
+    }
+    var type by rememberSaveable { mutableStateOf(suggestedType) }
+    var amountText by rememberSaveable {
+        mutableStateOf((clues?.amount ?: MvolaSmsParser.firstAmount(sms.body))?.toString().orEmpty())
+    }
+    var label by rememberSaveable { mutableStateOf(clues?.name.orEmpty()) }
     val amount = amountText.toLongOrNull()
 
     AlertDialog(
