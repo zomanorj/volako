@@ -82,7 +82,8 @@ fun OperationsScreen(
             items = filterItems(state.counts),
             selectedKey = filter.name,
             onSelect = { key -> viewModel.setFilter(OperationFilter.valueOf(key)) },
-            modifier = Modifier.padding(top = Spacing.md),
+            // un peu d'air sous les pastilles : la liste ne les touche pas en defilant
+            modifier = Modifier.padding(top = Spacing.md, bottom = Spacing.sm),
         )
 
         LazyColumn(

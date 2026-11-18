@@ -15,12 +15,14 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -58,12 +60,25 @@ fun FilterChipRow(
     modifier: Modifier = Modifier,
     contentPadding: PaddingValues = PaddingValues(horizontal = Spacing.lg),
 ) {
+    val listState = rememberLazyListState()
+    // le filtre choisi est toujours entierement visible (sinon il peut finir sous le fondu)
+    val selectedIndex = items.indexOfFirst { it.key == selectedKey }
+    LaunchedEffect(selectedIndex) {
+        if (selectedIndex < 0) return@LaunchedEffect
+        val visible = listState.layoutInfo.visibleItemsInfo.find { it.index == selectedIndex }
+        val end = listState.layoutInfo.viewportEndOffset - FADE_PX_GUESS
+        if (visible == null || visible.offset < 0 || visible.offset + visible.size > end) {
+            listState.animateScrollToItem((selectedIndex - 1).coerceAtLeast(0))
+        }
+    }
     LazyRow(
+        state = listState,
         modifier = modifier
-            // le fondu : on efface doucement le bord droit
+            // le fondu : on efface doucement le bord droit, seulement s'il reste des pastilles a voir
             .graphicsLayer { compositingStrategy = CompositingStrategy.Offscreen }
             .drawWithContent {
                 drawContent()
+                if (!listState.canScrollForward) return@drawWithContent
                 val fade = 48.dp.toPx()
                 drawRect(
                     brush = Brush.horizontalGradient(
@@ -83,6 +98,9 @@ fun FilterChipRow(
         }
     }
 }
+
+// largeur approximative du fondu en pixels (pour decider s'il faut faire defiler)
+private const val FADE_PX_GUESS = 140
 
 @Composable
 private fun FilterPill(item: FilterChipItem, selected: Boolean, onClick: () -> Unit) {

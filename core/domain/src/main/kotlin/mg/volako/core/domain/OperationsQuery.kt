@@ -26,7 +26,7 @@ object OperationsQuery {
         OperationFilter.FEES -> t.fee > 0
     }
 
-    // cherche dans le libelle, la personne, le numero et le montant.
+    // cherche dans le libelle, la personne, le numero et le montant (exact).
     // Sans accents ni majuscules ; pour les chiffres on ignore les espaces ("4 000" = "4000")
     fun matchesSearch(t: Transaction, query: String): Boolean {
         val q = normalize(query)
@@ -34,9 +34,11 @@ object OperationsQuery {
         val digits = q.filter(Char::isDigit)
         val onlyDigits = digits.isNotEmpty() && q.all { it.isDigit() || it == ' ' }
         if (onlyDigits) {
-            return t.amount.toString().contains(digits) ||
-                (t.fee > 0 && t.fee.toString().contains(digits)) ||
-                (t.counterpartyPhone?.contains(digits) == true)
+            // un montant doit etre exact ("4000" ne trouve pas 40 000), un numero peut etre partiel
+            val value = digits.toLongOrNull()
+            return t.amount == value ||
+                (t.fee > 0 && t.fee == value) ||
+                (digits.length >= 3 && t.counterpartyPhone?.contains(digits) == true)
         }
         val haystack = listOfNotNull(t.label, t.counterpartyName, t.counterpartyPhone, categoryWord(t))
             .joinToString(" ") { normalize(it) }

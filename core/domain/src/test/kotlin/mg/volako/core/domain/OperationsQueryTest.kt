@@ -58,6 +58,15 @@ class OperationsQueryTest {
     }
 
     @Test
+    fun `un montant est cherche exactement`() {
+        // vrai cas : "4000" trouvait aussi un retrait de 40 000
+        val gros = pain.copy(id = 9, amount = 40_000, label = "Gros")
+        assertEquals(listOf(pain), OperationsQuery.apply(all + gros, OperationFilter.ALL, "4000"))
+        // les frais aussi
+        assertEquals(listOf(retrait), OperationsQuery.apply(all, OperationFilter.ALL, "275"))
+    }
+
+    @Test
     fun `compteurs des pastilles suivent la recherche`() {
         val c = OperationsQuery.counts(all, "")
         assertEquals(4, c[OperationFilter.ALL])
