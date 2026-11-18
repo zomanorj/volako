@@ -18,6 +18,7 @@ import androidx.compose.material3.SwipeToDismissBoxValue
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberSwipeToDismissBoxState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -51,13 +52,23 @@ fun SwipeableTransactionRow(
     val state = rememberSwipeToDismissBoxState()
     val scope = rememberCoroutineScope()
 
+    // bug corrige : la liste garde l'etat "glisse" d'une ligne supprimee. Apres "Annuler",
+    // la ligne revenait deja glissee et etait supprimee de nouveau. On la remet en place.
+    LaunchedEffect(transaction.id) {
+        if (state.currentValue != SwipeToDismissBoxValue.Settled) state.snapTo(SwipeToDismissBoxValue.Settled)
+    }
+
     SwipeToDismissBox(
         state = state,
         modifier = modifier.clip(RoundedCornerShape(12.dp)),
         backgroundContent = { SwipeBackground(state.dismissDirection) },
         onDismiss = { direction ->
             when (direction) {
-                SwipeToDismissBoxValue.EndToStart -> onDelete()
+                SwipeToDismissBoxValue.EndToStart -> {
+                    onDelete()
+                    // on remet tout de suite l'etat a zero pour qu'il ne soit pas memorise
+                    scope.launch { state.snapTo(SwipeToDismissBoxValue.Settled) }
+                }
                 SwipeToDismissBoxValue.StartToEnd -> {
                     onEdit()
                     // la ligne revient a sa place, on ouvre juste la modification
