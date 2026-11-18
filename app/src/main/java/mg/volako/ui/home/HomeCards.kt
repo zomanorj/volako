@@ -3,64 +3,23 @@ package mg.volako.ui.home
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.unit.dp
 import mg.volako.R
-import mg.volako.core.designsystem.component.AccountRow
 import mg.volako.core.designsystem.component.AlertBanner
 import mg.volako.core.designsystem.component.SectionHeader
 import mg.volako.core.designsystem.component.StatTile
 import mg.volako.core.designsystem.component.formatAriary
 import mg.volako.core.designsystem.component.formatNumber
-import mg.volako.core.designsystem.theme.AmountTextStyle
 import mg.volako.core.designsystem.theme.Spacing
 import mg.volako.core.designsystem.theme.VolakoTheme
 import java.time.format.DateTimeFormatter
 import java.util.Locale
 import mg.volako.core.designsystem.R as DesignR
 
-// Les blocs du haut de l'accueil (l'organisation complete change a l'etape 2 de la refonte)
-
-@Composable
-fun BalancesCard(state: HomeUiState, onCount: () -> Unit) {
-    val onCard = MaterialTheme.colorScheme.onPrimaryContainer
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = MaterialTheme.shapes.extraLarge,
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
-    ) {
-        Column(Modifier.padding(Spacing.xl)) {
-            Text(stringResource(R.string.home_total), style = MaterialTheme.typography.bodyMedium, color = onCard)
-            Text(formatAriary(state.balances.total), style = AmountTextStyle.Hero, color = onCard)
-            val tile = onCard.copy(alpha = 0.12f)
-            AccountRow(
-                DesignR.drawable.ic_smartphone, stringResource(R.string.home_mvola), formatAriary(state.balances.mvola),
-                contentColor = onCard, tileContainer = tile,
-            )
-            AccountRow(
-                DesignR.drawable.ic_payments, stringResource(R.string.home_cash), formatAriary(state.balances.cash),
-                contentColor = onCard, tileContainer = tile,
-            )
-            TextButton(onClick = onCount) {
-                Icon(painterResource(DesignR.drawable.ic_account_balance_wallet), null, Modifier.size(18.dp))
-                Text(stringResource(R.string.count_button), Modifier.padding(start = Spacing.sm))
-            }
-        }
-    }
-}
+// Les blocs de l'accueil : bandeaux d'alerte et chiffres du mois
 
 // "2 SMS a verifier · 1 ecart de solde" : un bandeau qu'on touche pour ouvrir l'ecran
 @Composable

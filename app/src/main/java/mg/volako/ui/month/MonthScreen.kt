@@ -62,7 +62,9 @@ import mg.volako.core.designsystem.R as DesignR
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MonthScreen(
-    onBack: () -> Unit,
+    modifier: Modifier = Modifier,
+    // null quand le resume est un onglet (pas de fleche retour)
+    onBack: (() -> Unit)? = null,
     viewModel: MonthViewModel = viewModel(factory = MonthViewModel.Factory),
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
@@ -88,12 +90,15 @@ fun MonthScreen(
     }
 
     Scaffold(
+        modifier = modifier,
         topBar = {
             TopAppBar(
-                title = { Text(stringResource(R.string.month_title)) },
+                title = { Text(stringResource(R.string.summary_title), style = MaterialTheme.typography.headlineSmall) },
                 navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(painterResource(DesignR.drawable.ic_arrow_back), stringResource(R.string.review_back))
+                    if (onBack != null) {
+                        IconButton(onClick = onBack) {
+                            Icon(painterResource(DesignR.drawable.ic_arrow_back), stringResource(R.string.review_back))
+                        }
                     }
                 },
                 actions = {

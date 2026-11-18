@@ -32,6 +32,8 @@ data class HomeUiState(
     val month: MonthSummary = MonthSummary(YearMonth.now(), 0, 0, 0, 0),
     // operations groupees par jour, du plus recent au plus ancien
     val days: List<Pair<LocalDate, List<Transaction>>> = emptyList(),
+    // les 5 dernieres, pour l'accueil
+    val latest: List<Transaction> = emptyList(),
     val pendingCount: Int = 0,
     val gapCount: Int = 0,
     // date du dernier SMS "nouveau format" pas encore vu par l'utilisateur (null = pas d'alerte)
@@ -56,6 +58,7 @@ class HomeViewModel(
             balances = Ledger.balances(transactions),
             month = Ledger.monthSummary(transactions, YearMonth.now()),
             days = transactions.groupBy { it.occurredAt.toLocalDate() }.toList(),
+            latest = transactions.take(5),
             pendingCount = pending.size,
             gapCount = Ledger.balanceGaps(transactions).count { it.key !in acknowledged },
         )
@@ -80,6 +83,8 @@ class HomeViewModel(
     }
 
     private fun LocalDateTime.toEpochMillis() = atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()
+
+    fun find(id: Long): Transaction? = uiState.value.days.firstNotNullOfOrNull { (_, list) -> list.find { it.id == id } }
 
     // "Compter mon portefeuille" : on enregistre l'ecart entre l'app et la realite
     fun countCash(counted: Long) {

@@ -9,7 +9,7 @@ import androidx.compose.runtime.getValue
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import mg.volako.core.designsystem.theme.VolakoTheme
-import mg.volako.ui.navigation.AppNavigation
+import mg.volako.ui.navigation.VolakoApp
 import mg.volako.ui.onboarding.OnboardingScreen
 
 class MainActivity : ComponentActivity() {
@@ -30,7 +30,7 @@ class MainActivity : ComponentActivity() {
                 when (onboardingDone) {
                     null -> Unit
                     false -> OnboardingScreen()
-                    true -> AppNavigation()
+                    true -> VolakoApp()
                 }
             }
         }

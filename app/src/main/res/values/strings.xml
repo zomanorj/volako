@@ -18,7 +18,6 @@
     <string name="onboarding_error">L\'import a échoué. Réessaie.</string>
 
     <!-- Accueil -->
-    <string name="home_total">Total</string>
     <string name="home_mvola">MVola</string>
     <string name="home_cash">Espèces</string>
     <string name="home_income">Entrées</string>
@@ -122,7 +121,6 @@
     <string name="classify_save">Enregistrer</string>
 
     <!-- Etape 7 : resume du mois -->
-    <string name="month_title">Résumé du mois</string>
     <string name="month_previous">Mois précédent</string>
     <string name="month_next">Mois suivant</string>
     <string name="month_net">Solde du mois</string>
@@ -163,4 +161,15 @@
     <string name="edit_read_generic">Lu par le lecteur universel et vérifié par le solde</string>
     <string name="home_credit_sent">Crédit envoyé</string>
     <string name="home_credit_to">à %1$s</string>
+
+    <!-- Refonte etape 2 : navigation + accueil -->
+    <string name="nav_home">Accueil</string>
+    <string name="nav_operations">Opérations</string>
+    <string name="nav_summary">Résumé</string>
+    <string name="home_available">Disponible au total</string>
+    <string name="home_latest">Dernières opérations</string>
+    <string name="home_see_all">Tout voir</string>
+    <string name="count_short">Compter</string>
+    <string name="operations_title">Opérations</string>
+    <string name="summary_title">Résumé</string>
 </resources>
