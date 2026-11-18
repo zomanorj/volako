@@ -16,10 +16,12 @@ import mg.monargent.MonArgentApplication
 import mg.monargent.core.data.SmsImporter
 import mg.monargent.core.data.TransactionRepository
 import mg.monargent.core.data.UserPreferences
+import mg.monargent.core.domain.CashCount
 import mg.monargent.core.domain.Ledger
 import mg.monargent.core.model.Balances
 import mg.monargent.core.model.MonthSummary
 import mg.monargent.core.model.Transaction
+import java.time.LocalDateTime
 import java.time.YearMonth
 
 data class HomeUiState(
@@ -31,7 +33,7 @@ data class HomeUiState(
 )
 
 class HomeViewModel(
-    repository: TransactionRepository,
+    private val repository: TransactionRepository,
     private val importer: SmsImporter,
     private val preferences: UserPreferences,
 ) : ViewModel() {
@@ -64,6 +66,17 @@ class HomeViewModel(
             runCatching { importer.importNew() }.onSuccess { _newCount.value = it.added }
             _isSyncing.value = false
         }
+    }
+
+    // "Compter mon portefeuille" : on enregistre l'ecart entre l'app et la realite
+    fun countCash(counted: Long) {
+        val adjustment = CashCount.adjustment(uiState.value.balances.cash, counted, LocalDateTime.now()) ?: return
+        viewModelScope.launch { repository.addManual(adjustment) }
+    }
+
+    // pour le bouton "Annuler" apres une saisie
+    fun delete(id: Long) {
+        viewModelScope.launch { repository.delete(id) }
     }
 
     // vrai la 1re fois seulement : l'ecran demande alors les permissions "en direct"

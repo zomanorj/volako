@@ -5,6 +5,7 @@ import mg.monargent.core.model.Balances
 import mg.monargent.core.model.MonthSummary
 import mg.monargent.core.model.PendingSms
 import mg.monargent.core.model.Transaction
+import mg.monargent.core.model.TransactionType
 import java.time.LocalDateTime
 import java.time.YearMonth
 
@@ -22,7 +23,11 @@ interface TransactionRepository {
     // import en lot (historique) : bien plus rapide que recordSms un par un
     suspend fun importSms(messages: List<RawSms>): ImportReport
 
-    suspend fun addManual(transaction: Transaction)
+    // libelles frequents des saisies a la main (depense ou entree)
+    fun observeFrequentLabels(type: TransactionType, limit: Int): Flow<List<String>>
+
+    // retourne l'id, pour pouvoir annuler
+    suspend fun addManual(transaction: Transaction): Long
     suspend fun delete(id: Long)
     suspend fun dismissPendingSms(id: Long)
 }

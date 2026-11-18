@@ -14,6 +14,7 @@ import mg.monargent.core.model.MonthSummary
 import mg.monargent.core.model.PendingSms
 import mg.monargent.core.model.Transaction
 import mg.monargent.core.model.TransactionSource
+import mg.monargent.core.model.TransactionType
 import mg.monargent.core.sms.MvolaSmsParser
 import mg.monargent.core.sms.ParsedSms
 import java.time.LocalDateTime
@@ -97,9 +98,11 @@ class OfflineTransactionRepository(
         )
     }
 
-    override suspend fun addManual(transaction: Transaction) {
+    override fun observeFrequentLabels(type: TransactionType, limit: Int): Flow<List<String>> =
+        transactionDao.observeFrequentLabels(type, limit)
+
+    override suspend fun addManual(transaction: Transaction): Long =
         transactionDao.insert(transaction.copy(id = 0, source = TransactionSource.MANUAL).asEntity())
-    }
 
     override suspend fun delete(id: Long) = transactionDao.delete(id)
 

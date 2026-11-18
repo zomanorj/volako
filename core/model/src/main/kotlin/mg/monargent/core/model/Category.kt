@@ -6,6 +6,8 @@ enum class Category(val key: String) {
     CREDIT("credit"),
     TRANSFER("transfer"),
     INCOME("income"),
+    // ecart trouve en comptant son portefeuille (depenses ou entrees oubliees)
+    UNTRACKED("untracked"),
     OTHER("other");
 
     companion object {

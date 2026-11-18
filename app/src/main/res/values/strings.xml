@@ -48,4 +48,40 @@
     <string name="notif_payment">Envoi</string>
     <string name="notif_received">Argent reçu</string>
     <string name="notif_recording">Enregistrement d\'une opération MVola…</string>
+
+    <!-- Saisie rapide (etape 5) -->
+    <string name="entry_add">Ajouter</string>
+    <string name="entry_expense">Dépense</string>
+    <string name="entry_income">Reçu</string>
+    <string name="entry_cash_hint">Espèces · choisis un libellé pour enregistrer</string>
+    <string name="entry_other">Autre</string>
+    <string name="entry_other_label">Libellé</string>
+    <string name="entry_save">Enregistrer</string>
+    <string name="entry_backspace">Effacer</string>
+    <string name="entry_saved_expense">−%1$s · %2$s</string>
+    <string name="entry_saved_income">+%1$s · %2$s</string>
+    <string name="entry_undo">Annuler</string>
+    <string-array name="entry_default_expense_labels">
+        <item>Repas</item>
+        <item>Transport</item>
+        <item>Courses</item>
+        <item>Café</item>
+        <item>Divers</item>
+    </string-array>
+    <string-array name="entry_default_income_labels">
+        <item>Argent reçu</item>
+        <item>Salaire</item>
+        <item>Remboursement</item>
+    </string-array>
+
+    <!-- Compter mon portefeuille -->
+    <string name="count_title">Compter mon portefeuille</string>
+    <string name="count_body">D\'après tes opérations, tu devrais avoir %1$s en espèces. Combien as-tu vraiment ?</string>
+    <string name="count_field">Montant en poche (Ar)</string>
+    <string name="count_confirm">Corriger</string>
+    <string name="count_cancel">Annuler</string>
+    <string name="count_button">Compter mon portefeuille</string>
+    <string name="count_negative">Ton solde espèces est négatif (%1$s) : de l\'argent est entré dans ta poche sans être noté. Compte ton portefeuille pour corriger.</string>
+    <string name="home_untracked_expense">Dépenses non notées</string>
+    <string name="home_untracked_income">Entrées non notées</string>
 </resources>

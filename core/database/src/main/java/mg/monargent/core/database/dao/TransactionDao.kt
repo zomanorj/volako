@@ -6,6 +6,7 @@ import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import kotlinx.coroutines.flow.Flow
 import mg.monargent.core.database.entity.TransactionEntity
+import mg.monargent.core.model.TransactionType
 
 @Dao
 interface TransactionDao {
@@ -34,6 +35,17 @@ interface TransactionDao {
 
     @Query("SELECT EXISTS(SELECT 1 FROM transactions WHERE sms_reference = :reference)")
     suspend fun existsByReference(reference: String): Boolean
+
+    // libelles les plus utilises dans les saisies a la main, pour les proposer en 1 touche
+    @Query(
+        """
+        SELECT label FROM transactions
+        WHERE source = 'MANUAL' AND type = :type AND label IS NOT NULL AND label != ''
+        GROUP BY label ORDER BY COUNT(*) DESC, MAX(occurred_at) DESC
+        LIMIT :limit
+        """,
+    )
+    fun observeFrequentLabels(type: TransactionType, limit: Int): Flow<List<String>>
 
     @Query("DELETE FROM transactions WHERE id = :id")
     suspend fun delete(id: Long)
