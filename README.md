@@ -20,6 +20,12 @@ export JAVA_HOME=~/devtools/jdk17
 # APK : app/build/outputs/apk/debug/app-debug.apk
 ```
 
+## Installer sur le téléphone (Wi-Fi)
+Une fois le téléphone associé (Options de développement > Débogage sans fil) :
+```bash
+tools/run_on_phone.sh 192.168.x.x:PORT
+```
+
 ## Ajouter une icône
 ```bash
 python3 tools/material_symbol.py nom_icone
