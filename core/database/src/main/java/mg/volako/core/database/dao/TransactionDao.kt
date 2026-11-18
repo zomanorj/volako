@@ -51,6 +51,10 @@ interface TransactionDao {
     @Update
     suspend fun update(transaction: TransactionEntity)
 
+    // corrige l'heure d'une operation SMS deja enregistree (relecture apres une correction)
+    @Query("UPDATE transactions SET occurred_at = :occurredAt WHERE sms_reference = :reference AND source = 'SMS'")
+    suspend fun retimeByReference(reference: String, occurredAt: Long)
+
     // applique un libelle a toutes les operations SMS avec ce numero (sauf retraits/depots et credit)
     @Query(
         "UPDATE transactions SET label = :label " +

@@ -45,8 +45,15 @@ fun BalancesCard(state: HomeUiState, onCount: () -> Unit) {
         Column(Modifier.padding(Spacing.xl)) {
             Text(stringResource(R.string.home_total), style = MaterialTheme.typography.bodyMedium, color = onCard)
             Text(formatAriary(state.balances.total), style = AmountTextStyle.Hero, color = onCard)
-            AccountRow(DesignR.drawable.ic_smartphone, stringResource(R.string.home_mvola), formatAriary(state.balances.mvola))
-            AccountRow(DesignR.drawable.ic_payments, stringResource(R.string.home_cash), formatAriary(state.balances.cash))
+            val tile = onCard.copy(alpha = 0.12f)
+            AccountRow(
+                DesignR.drawable.ic_smartphone, stringResource(R.string.home_mvola), formatAriary(state.balances.mvola),
+                contentColor = onCard, tileContainer = tile,
+            )
+            AccountRow(
+                DesignR.drawable.ic_payments, stringResource(R.string.home_cash), formatAriary(state.balances.cash),
+                contentColor = onCard, tileContainer = tile,
+            )
             TextButton(onClick = onCount) {
                 Icon(painterResource(DesignR.drawable.ic_account_balance_wallet), null, Modifier.size(18.dp))
                 Text(stringResource(R.string.count_button), Modifier.padding(start = Spacing.sm))

@@ -15,7 +15,8 @@ object MvolaSmsParser {
     // v2 : achat de credit pour un autre numero (avec frais)
     // v3 : lecteur universel verifie par le solde (GenericSmsReader + SmartSmsInterpreter)
     // v4 : modeles appris + un SMS qui ressemble a une operation n'est plus jamais ignore
-    const val VERSION = 4
+    // v5 : heure d'envoi du reseau (corrige l'ordre des SMS livres en retard)
+    const val VERSION = 5
 
     // ---- morceaux de regex (declares en premier car les regles les utilisent) ----
 
@@ -120,11 +121,19 @@ object MvolaSmsParser {
             fee = m.text("fee")?.let(::toLong) ?: 0,
             balanceAfter = m.long("balance"),
             reference = m.text("ref")!!,
-            occurredAt = parseDate(m.text("date")!!, m.text("time")!!) ?: receivedAt,
+            occurredAt = bestTime(parseDate(m.text("date")!!, m.text("time")!!), receivedAt),
             counterpartyName = m.text("name")?.trim(),
             counterpartyPhone = m.text("phone"),
             reason = m.text("reason")?.trim()?.ifEmpty { null },
         )
+
+    // la date du texte n'a que les minutes ; l'heure d'envoi du reseau a les secondes.
+    // Si elles collent (moins de 2 min d'ecart) on garde la plus precise, sinon le texte gagne.
+    fun bestTime(fromText: LocalDateTime?, fromNetwork: LocalDateTime): LocalDateTime {
+        if (fromText == null) return fromNetwork
+        val gap = kotlin.math.abs(java.time.Duration.between(fromText, fromNetwork).toMinutes())
+        return if (gap < 2) fromNetwork else fromText
+    }
 
     // "16/11/26" + "07:39" -> 2026-11-16T07:39
     private fun parseDate(date: String, time: String): LocalDateTime? = runCatching {

@@ -54,7 +54,7 @@ object SmartSmsInterpreter {
             fee = verified.second,
             balanceAfter = balance,
             reference = clues.reference,
-            occurredAt = clues.occurredAt ?: receivedAt,
+            occurredAt = MvolaSmsParser.bestTime(clues.occurredAt, receivedAt),
             counterpartyName = clues.name,
             counterpartyPhone = clues.phone,
             readBy = ReadMethod.GENERIC,

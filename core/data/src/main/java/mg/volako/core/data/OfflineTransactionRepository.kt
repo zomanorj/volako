@@ -124,6 +124,11 @@ class OfflineTransactionRepository(
         }
 
         val ids = transactionDao.insertAll(entities)
+        // deja enregistrees : on remet juste la bonne heure (utile apres une correction de lecture)
+        ids.forEachIndexed { i, id ->
+            val e = entities[i]
+            if (id == -1L && e.smsReference != null) transactionDao.retimeByReference(e.smsReference!!, e.occurredAt)
+        }
         val newUnknown = unknown.distinctBy { it.body }.filterNot { pendingSmsDao.existsByBody(it.body) }
         pendingSmsDao.insertAll(newUnknown.map { PendingSms(body = it.body, receivedAt = it.receivedAt).asEntity() })
 

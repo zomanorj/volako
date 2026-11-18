@@ -32,6 +32,7 @@ import mg.volako.R
 import mg.volako.core.designsystem.component.IconTile
 import mg.volako.core.designsystem.component.MoneyListItem
 import mg.volako.core.designsystem.component.formatAriary
+import mg.volako.core.designsystem.component.formatPhone
 import mg.volako.core.designsystem.theme.AmountTextStyle
 import mg.volako.core.designsystem.theme.VolakoTheme
 import mg.volako.core.designsystem.theme.Spacing
@@ -125,7 +126,11 @@ fun TransactionRow(t: Transaction, modifier: Modifier = Modifier) {
         TransactionType.TRANSFER -> "" to neutral
         TransactionType.EXPENSE -> "−" to MaterialTheme.colorScheme.onSurface
     }
+    // credit achete pour un autre numero : titre court + numero lisible en sous-titre
+    val creditForOther = t.category == Category.CREDIT && t.counterpartyPhone != null &&
+        (t.label == null || t.label!!.startsWith("Crédit"))
     val title = when {
+        creditForOther -> stringResource(R.string.home_credit_sent)
         t.type == TransactionType.TRANSFER ->
             stringResource(if (t.toAccount == Account.CASH) R.string.home_withdrawal else R.string.home_deposit)
         t.category == Category.UNTRACKED -> stringResource(
@@ -138,8 +143,10 @@ fun TransactionRow(t: Transaction, modifier: Modifier = Modifier) {
     // sous-titre : la personne (si le titre est deja un libelle), le compte, l'heure
     val account = stringResource(if (t.account == Account.CASH) R.string.home_cash else R.string.home_mvola)
     val subtitle = listOfNotNull(
+        t.counterpartyPhone?.takeIf { creditForOther }?.let { stringResource(R.string.home_credit_to, formatPhone(it)) },
         t.counterpartyName?.takeIf { it != title && t.type != TransactionType.TRANSFER },
-        account,
+        // un credit envoye est toujours paye par MVola : on garde la place pour le numero et l'heure
+        account.takeIf { !creditForOther },
         t.occurredAt.format(TIME),
     ).joinToString(" · ")
 

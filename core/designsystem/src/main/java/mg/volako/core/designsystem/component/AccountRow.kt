@@ -10,6 +10,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import mg.volako.core.designsystem.theme.AmountTextStyle
 import mg.volako.core.designsystem.theme.Spacing
 
@@ -20,6 +21,9 @@ fun AccountRow(
     name: String,
     amount: String,
     modifier: Modifier = Modifier,
+    // sur une carte coloree, le carre d'icone doit etre une teinte de la carte (pas un trou sombre)
+    contentColor: Color = MaterialTheme.colorScheme.onSurface,
+    tileContainer: Color = MaterialTheme.colorScheme.surfaceContainerHigh,
 ) {
     Row(
         modifier = modifier
@@ -28,12 +32,13 @@ fun AccountRow(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(Spacing.md),
     ) {
-        IconTile(icon, tint = MaterialTheme.colorScheme.onSurfaceVariant)
+        IconTile(icon, tint = contentColor, container = tileContainer)
         Text(
             text = name,
             style = MaterialTheme.typography.bodyLarge,
+            color = contentColor,
             modifier = Modifier.weight(1f),
         )
-        Text(text = amount, style = AmountTextStyle.Regular)
+        Text(text = amount, style = AmountTextStyle.Regular, color = contentColor)
     }
 }

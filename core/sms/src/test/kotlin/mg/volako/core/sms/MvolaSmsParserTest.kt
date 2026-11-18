@@ -134,6 +134,27 @@ class MvolaSmsParserTest {
     }
 
     @Test
+    fun `heure du reseau plus precise si elle colle avec le texte`() {
+        val network = LocalDateTime.of(2026, 11, 16, 7, 40, 42)
+        val o = MvolaSmsParser.parse(
+            "Retrait reussi: 10 000 Ar aupres de B 0380000002 le 16/11/26 a 07:40. Frais: 275 Ar. Solde : 190 113 Ar. Ref: 3.",
+            network,
+        ) as ParsedSms.Operation
+        assertEquals(network, o.occurredAt)
+    }
+
+    @Test
+    fun `SMS livre en retard garde la date du texte`() {
+        // l'operateur a livre le SMS 2 h plus tard : la date ecrite dans le SMS gagne
+        val late = LocalDateTime.of(2026, 11, 16, 9, 41)
+        val o = MvolaSmsParser.parse(
+            "Retrait reussi: 10 000 Ar aupres de B 0380000002 le 16/11/26 a 07:40. Frais: 275 Ar. Solde : 190 113 Ar. Ref: 3.",
+            late,
+        ) as ParsedSms.Operation
+        assertEquals(LocalDateTime.of(2026, 11, 16, 7, 40), o.occurredAt)
+    }
+
+    @Test
     fun `expediteur MVola reconnu`() {
         assertTrue(MvolaSmsParser.isFromMvola("MVola"))
         assertTrue(MvolaSmsParser.isFromMvola("MVOLA"))

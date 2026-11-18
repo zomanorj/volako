@@ -161,4 +161,6 @@
     <string name="format_alert_ok">Compris</string>
     <string name="edit_read_template">Lu grâce à un modèle appris de tes confirmations</string>
     <string name="edit_read_generic">Lu par le lecteur universel et vérifié par le solde</string>
+    <string name="home_credit_sent">Crédit envoyé</string>
+    <string name="home_credit_to">à %1$s</string>
 </resources>

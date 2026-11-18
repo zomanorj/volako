@@ -114,7 +114,7 @@ object SmsTemplates {
             // pas de solde dans ce type de SMS : on ne peut pas le verifier, on garde -1
             balanceAfter = template.balanceSlot?.let { n[it].value } ?: NO_BALANCE,
             reference = template.referenceSlot?.let { n[it].raw } ?: clues?.reference ?: return null,
-            occurredAt = clues?.occurredAt ?: receivedAt,
+            occurredAt = MvolaSmsParser.bestTime(clues?.occurredAt, receivedAt),
             counterpartyName = clues?.name,
             counterpartyPhone = template.phoneSlot?.let { n[it].raw },
             reason = template.label,
