@@ -32,6 +32,7 @@ import mg.monargent.R
 import mg.monargent.core.designsystem.component.LabelValueRow
 import mg.monargent.core.designsystem.component.formatAriary
 import mg.monargent.core.designsystem.theme.Spacing
+import mg.monargent.core.model.Category
 import mg.monargent.core.model.Transaction
 import mg.monargent.core.model.TransactionSource
 import mg.monargent.core.model.TransactionType
@@ -51,7 +52,8 @@ fun EditTransactionSheet(
     var label by rememberSaveable { mutableStateOf(transaction.label.orEmpty()) }
     var amountText by rememberSaveable { mutableStateOf(transaction.amount.toString()) }
     // on propose de retenir le libelle seulement pour un envoi/reception avec un numero
-    val canRemember = !isManual && transaction.counterpartyPhone != null && transaction.type != TransactionType.TRANSFER
+    val canRemember = !isManual && transaction.counterpartyPhone != null &&
+        transaction.type != TransactionType.TRANSFER && transaction.category != Category.CREDIT
     var remember by rememberSaveable { mutableStateOf(canRemember) }
     val amount = if (isManual) amountText.toLongOrNull() else transaction.amount
 

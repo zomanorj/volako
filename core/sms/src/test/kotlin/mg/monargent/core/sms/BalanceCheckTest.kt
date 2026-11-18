@@ -39,6 +39,14 @@ class BalanceCheckTest {
     }
 
     @Test
+    fun `deux achats de credit pour un autre numero, frais compris`() {
+        // vrai cas du 18/11 : 3 838 - 100 - 150 de frais = 3 588
+        val avant = op("Achat de credit YAS reussi: 100 Ar pour 0340000099. Frais: 150 Ar. Solde MVola : 3 838 Ar. Ref: 20")
+        val apres = op("Achat de credit YAS reussi: 100 Ar pour 0340000099. Frais: 150 Ar. Solde MVola : 3 588 Ar. Ref: 21")
+        assertEquals(0L, BalanceCheck.gap(avant.balanceAfter, apres))
+    }
+
+    @Test
     fun `SMS manquant detecte`() {
         // entre ces deux SMS il manque 1 500 Ar d'operations (vrai cas du 17-18 novembre)
         val avant = op("Retrait reussi: 20 000 Ar aupres de F 0380000007 le 17/11/26 a 13:57. Frais: 550 Ar. Solde : 34 088 Ar. Ref: 8.")

@@ -27,6 +27,26 @@ class MvolaSmsParserTest {
     }
 
     @Test
+    fun `achat de credit pour un autre numero avec frais`() {
+        val o = op("Achat de credit YAS reussi: 100 Ar pour 0340000099. Frais: 150 Ar. Solde MVola : 3 838 Ar. Ref: 11000000001")
+        assertEquals(OperationKind.CREDIT_PURCHASE, o.kind)
+        assertEquals(100L, o.amount)
+        assertEquals(150L, o.fee)
+        assertEquals("0340000099", o.counterpartyPhone)
+        assertEquals(3_838L, o.balanceAfter)
+        assertEquals("YAS", o.operator)
+    }
+
+    @Test
+    fun `info de solde avec Ref reste ignoree`() {
+        val r = MvolaSmsParser.parse(
+            "Le 18/11/26 a 16:53, solde MVola : 3 588. Rechargez votre compte Yas via MVola et gagnez un bonus immediatement de 20 pourcent. Ref: 11000000002.",
+            receivedAt,
+        )
+        assertEquals(ParsedSms.Ignored, r)
+    }
+
+    @Test
     fun `argent recu sans deux points apres Ref`() {
         val o = op("200 000 Ar recu de RakotoJean 0340000001 le 16/11/26 a 07:39. Raison: 37. Solde: 200 388 Ar. Ref 10900000002")
         assertEquals(OperationKind.RECEIVED, o.kind)

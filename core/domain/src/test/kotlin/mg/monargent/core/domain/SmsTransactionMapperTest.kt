@@ -52,6 +52,19 @@ class SmsTransactionMapperTest {
     }
 
     @Test
+    fun `credit pour un autre numero garde le destinataire et les frais`() {
+        val t = SmsTransactionMapper.map(
+            op("Achat de credit YAS reussi: 100 Ar pour 0340000099. Frais: 150 Ar. Solde MVola : 3 588 Ar. Ref: 21"),
+            previousSmsBalance = 3_838,
+        )
+        assertEquals(Category.CREDIT, t.category)
+        assertEquals("Crédit YAS pour 0340000099", t.label)
+        assertEquals("0340000099", t.counterpartyPhone)
+        assertEquals(150L, t.fee)
+        assertEquals(-250L, t.effectOn(Account.MVOLA))
+    }
+
+    @Test
     fun `envoi garde la raison comme libelle`() {
         val t = SmsTransactionMapper.map(
             op("81 900 Ar envoye a Toky Rabe 0340000003 le 16/11/26 a 10:54. Frais: 819 Ar. Raison: Chargeur et cache ecran. Solde: 64 094 Ar. Ref: 4"),

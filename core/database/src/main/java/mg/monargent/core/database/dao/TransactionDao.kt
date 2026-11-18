@@ -51,8 +51,11 @@ interface TransactionDao {
     @Update
     suspend fun update(transaction: TransactionEntity)
 
-    // applique un libelle a toutes les operations SMS avec ce numero (sauf retraits/depots)
-    @Query("UPDATE transactions SET label = :label WHERE counterparty_phone = :phone AND type != 'TRANSFER'")
+    // applique un libelle a toutes les operations SMS avec ce numero (sauf retraits/depots et credit)
+    @Query(
+        "UPDATE transactions SET label = :label " +
+            "WHERE counterparty_phone = :phone AND type != 'TRANSFER' AND category != 'credit'",
+    )
     suspend fun relabelByPhone(phone: String, label: String)
 
     @Query("DELETE FROM transactions WHERE id = :id")

@@ -3,6 +3,7 @@ package mg.monargent.core.data
 import android.content.Context
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
+import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.datastore.preferences.core.stringSetPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
@@ -29,6 +30,13 @@ class UserPreferences(private val context: Context) {
         context.dataStore.edit { it[LAST_SMS_DATE] = millis }
     }
 
+    // version du lecteur de SMS utilisee lors du dernier import complet
+    suspend fun parserVersion(): Int = context.dataStore.data.first()[PARSER_VERSION] ?: 1
+
+    suspend fun setParserVersion(version: Int) {
+        context.dataStore.edit { it[PARSER_VERSION] = version }
+    }
+
     // pour ne demander qu'une fois les permissions "reception SMS" et "notifications"
     suspend fun livePermissionsAsked(): Boolean = context.dataStore.data.first()[LIVE_PERMS_ASKED] ?: false
 
@@ -48,5 +56,6 @@ class UserPreferences(private val context: Context) {
         val LAST_SMS_DATE = longPreferencesKey("last_imported_sms_date")
         val LIVE_PERMS_ASKED = booleanPreferencesKey("live_permissions_asked")
         val ACK_GAPS = stringSetPreferencesKey("acknowledged_gaps")
+        val PARSER_VERSION = intPreferencesKey("parser_version")
     }
 }

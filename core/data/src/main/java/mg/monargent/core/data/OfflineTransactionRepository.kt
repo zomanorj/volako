@@ -109,6 +109,22 @@ class OfflineTransactionRepository(
     override fun observeFrequentLabels(type: TransactionType, limit: Int): Flow<List<String>> =
         transactionDao.observeFrequentLabels(type, limit)
 
+    override suspend fun reprocessPendingSms(): Int {
+        var resolved = 0
+        for (pending in pendingSmsDao.getAll()) {
+            val receivedAt = pending.receivedAt.toLocalDateTime()
+            when (MvolaSmsParser.parse(pending.body, receivedAt)) {
+                is ParsedSms.Unknown -> Unit // toujours inconnu, on le laisse
+                else -> {
+                    // maintenant reconnu (ou ignore) : on l'enregistre et on le retire de "A verifier"
+                    pendingSmsDao.delete(pending.id)
+                    if (recordSms(pending.body, receivedAt).result == SmsRecordResult.ADDED) resolved++
+                }
+            }
+        }
+        return resolved
+    }
+
     override suspend fun addManual(transaction: Transaction): Long =
         transactionDao.insert(transaction.copy(id = 0, source = TransactionSource.MANUAL).asEntity())
 
@@ -145,7 +161,7 @@ class OfflineTransactionRepository(
         rules: Map<String, String>? = null,
     ): Transaction {
         val phone = transaction.counterpartyPhone ?: return transaction
-        if (transaction.type == TransactionType.TRANSFER) return transaction
+        if (transaction.type == TransactionType.TRANSFER || transaction.category == Category.CREDIT) return transaction
         val label = rules?.get(phone) ?: counterpartyLabelDao.labelFor(phone) ?: return transaction
         return transaction.copy(label = label)
     }

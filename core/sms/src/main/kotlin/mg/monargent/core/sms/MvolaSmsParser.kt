@@ -11,6 +11,10 @@ object MvolaSmsParser {
 
     const val SENDER = "MVola"
 
+    // a augmenter a chaque nouveau format reconnu : l'app relit alors tout l'historique une fois
+    // v2 : achat de credit pour un autre numero (avec frais)
+    const val VERSION = 2
+
     // ---- morceaux de regex (declares en premier car les regles les utilisent) ----
 
     // nom puis numero, avec ou sans parentheses : "MARIE ANICK 4 0380000000" ou "IDEE-ALL (0340000000)"
@@ -69,14 +73,22 @@ object MvolaSmsParser {
 
     private val rules = listOf(
         // Achat de credit YAS reussi: 500 Ar. Bonus: ... Solde MVola : 388 Ar. Ref: 10909436462
-        Rule(regex("^Achat de credit (?<operator>\\S+) reussi ?: ${amount("amount")} Ar\\..*? $BALANCE\\.? $REF")) { m, at ->
+        // Achat de credit YAS reussi: 100 Ar pour 0340000000. Frais: 150 Ar. Solde MVola : 3 588 Ar. Ref: ...
+        Rule(
+            regex(
+                "^Achat de credit (?<operator>\\S+) reussi ?: ${amount("amount")} Ar" +
+                    "(?: pour (?<phone>\\+?\\d{6,}))?\\.$FEE_OPT.*? $BALANCE\\.? $REF",
+            ),
+        ) { m, at ->
             ParsedSms.Operation(
                 kind = OperationKind.CREDIT_PURCHASE,
                 amount = m.long("amount"),
-                fee = 0,
+                fee = m.text("fee")?.let(::toLong) ?: 0,
                 balanceAfter = m.long("balance"),
                 reference = m.text("ref")!!,
                 occurredAt = at,
+                // rempli seulement si le credit est pour quelqu'un d'autre
+                counterpartyPhone = m.text("phone"),
                 operator = m.text("operator"),
             )
         },

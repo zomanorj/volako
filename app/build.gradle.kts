@@ -12,8 +12,8 @@ android {
         applicationId = "mg.monargent"
         minSdk = libs.versions.minSdk.get().toInt()
         targetSdk = libs.versions.targetSdk.get().toInt()
-        versionCode = 8
-        versionName = "1.0.0"
+        versionCode = 9
+        versionName = "1.0.1"
     }
 
     buildTypes {

@@ -27,6 +27,9 @@ interface TransactionRepository {
     fun observeFrequentLabels(type: TransactionType, limit: Int): Flow<List<String>>
 
     // retourne l'id, pour pouvoir annuler
+    // relit les SMS "a verifier" avec le lecteur actuel (apres l'ajout d'un nouveau format)
+    suspend fun reprocessPendingSms(): Int
+
     suspend fun addManual(transaction: Transaction): Long
     // modifier une operation (libelle, montant d'une saisie manuelle...)
     suspend fun update(transaction: Transaction)
