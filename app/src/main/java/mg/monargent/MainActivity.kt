@@ -6,7 +6,7 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import mg.monargent.core.designsystem.theme.MonArgentTheme
-import mg.monargent.ui.SetupScreen
+import mg.monargent.ui.smstest.SmsTestScreen
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -17,7 +17,7 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             MonArgentTheme {
-                SetupScreen()
+                SmsTestScreen()
             }
         }
     }

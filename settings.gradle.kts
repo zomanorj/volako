@@ -24,3 +24,4 @@ rootProject.name = "MonArgent"
 
 include(":app")
 include(":core:designsystem")
+include(":core:sms")

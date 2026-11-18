@@ -1,8 +1,24 @@
 <resources>
     <string name="app_name">Mon Argent</string>
-    <string name="home_total_label">Total disponible</string>
-    <string name="account_mvola">MVola</string>
-    <string name="account_cash">Espèces</string>
-    <string name="setup_title">Installation réussie</string>
-    <string name="setup_body">La base de l\'app est prête. Prochaine étape : lire tes SMS MVola.</string>
+
+    <!-- Ecran temporaire "Tester un SMS" (etape 1) -->
+    <string name="smstest_title">Tester un SMS MVola</string>
+    <string name="smstest_hint">Colle ici un SMS MVola</string>
+    <string name="smstest_paste">Coller</string>
+    <string name="smstest_kind_credit">Achat de crédit</string>
+    <string name="smstest_kind_received">Argent reçu</string>
+    <string name="smstest_kind_sent">Envoi / paiement</string>
+    <string name="smstest_kind_withdrawal">Retrait (MVola vers espèces)</string>
+    <string name="smstest_kind_deposit">Dépôt (espèces vers MVola)</string>
+    <string name="smstest_unknown_title">Format inconnu</string>
+    <string name="smstest_unknown_body">Ce SMS ira dans « À vérifier ». Envoie-le au développeur pour qu\'il soit reconnu.</string>
+    <string name="smstest_ignored_title">SMS ignoré</string>
+    <string name="smstest_ignored_body">Ce n\'est pas une opération (publicité, info ou suite d\'un SMS).</string>
+    <string name="smstest_fee">Frais</string>
+    <string name="smstest_balance">Solde après</string>
+    <string name="smstest_person">Personne</string>
+    <string name="smstest_reason">Raison</string>
+    <string name="smstest_operator">Opérateur</string>
+    <string name="smstest_date">Date</string>
+    <string name="smstest_ref">Référence</string>
 </resources>
