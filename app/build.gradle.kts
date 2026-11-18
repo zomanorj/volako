@@ -5,11 +5,11 @@ plugins {
 }
 
 android {
-    namespace = "mg.monargent"
+    namespace = "mg.volako"
     compileSdk = libs.versions.compileSdk.get().toInt()
 
     defaultConfig {
-        applicationId = "mg.monargent"
+        applicationId = "mg.volako"
         minSdk = libs.versions.minSdk.get().toInt()
         targetSdk = libs.versions.targetSdk.get().toInt()
         versionCode = 11

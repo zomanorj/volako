@@ -21,5 +21,5 @@ fi
 "$ADB" get-state > /dev/null || { echo "Telephone introuvable. Debogage sans fil active ?"; exit 1; }
 
 ./gradlew installDebug --console=plain -q
-"$ADB" shell am start -n mg.monargent/.MainActivity > /dev/null
+"$ADB" shell am start -n mg.volako/.MainActivity > /dev/null
 echo "App installee et lancee"

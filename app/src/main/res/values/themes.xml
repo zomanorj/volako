@@ -1,11 +1,11 @@
 <resources>
     <!-- Theme de base de la fenetre, Compose s'occupe du reste -->
-    <style name="Theme.MonArgent" parent="android:Theme.Material.Light.NoActionBar" />
+    <style name="Theme.Volako" parent="android:Theme.Material.Light.NoActionBar" />
 
     <!-- Ecran de demarrage (API SplashScreen officielle) -->
-    <style name="Theme.MonArgent.Starting" parent="Theme.SplashScreen">
+    <style name="Theme.Volako.Starting" parent="Theme.SplashScreen">
         <item name="windowSplashScreenBackground">@color/splash_bg</item>
         <item name="windowSplashScreenAnimatedIcon">@drawable/ic_splash</item>
-        <item name="postSplashScreenTheme">@style/Theme.MonArgent</item>
+        <item name="postSplashScreenTheme">@style/Theme.Volako</item>
     </style>
 </resources>

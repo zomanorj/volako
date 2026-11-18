@@ -20,7 +20,7 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "MonArgent"
+rootProject.name = "Volako"
 
 include(":app")
 include(":core:designsystem")

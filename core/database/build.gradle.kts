@@ -5,7 +5,7 @@ plugins {
 }
 
 android {
-    namespace = "mg.monargent.core.database"
+    namespace = "mg.volako.core.database"
     compileSdk = libs.versions.compileSdk.get().toInt()
 
     defaultConfig {

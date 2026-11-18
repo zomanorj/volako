@@ -4,7 +4,7 @@ plugins {
 }
 
 android {
-    namespace = "mg.monargent.core.designsystem"
+    namespace = "mg.volako.core.designsystem"
     compileSdk = libs.versions.compileSdk.get().toInt()
 
     defaultConfig {

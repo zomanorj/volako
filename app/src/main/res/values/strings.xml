@@ -1,9 +1,9 @@
 <resources>
-    <string name="app_name">Mon Argent</string>
+    <string name="app_name">Volako</string>
 
     <!-- Premier lancement -->
     <string name="onboarding_title">Tes SMS MVola deviennent tes comptes</string>
-    <string name="onboarding_body">Mon Argent lit les SMS envoyés par MVola pour noter tes opérations automatiquement : crédit, envoi, retrait, argent reçu.</string>
+    <string name="onboarding_body">Volako lit les SMS envoyés par MVola pour noter tes opérations automatiquement : crédit, envoi, retrait, argent reçu.</string>
     <string name="onboarding_privacy">Seuls les SMS de MVola sont lus. Rien ne quitte ton téléphone.</string>
     <string name="onboarding_allow">Autoriser l\'accès aux SMS</string>
     <string name="onboarding_later">Plus tard</string>
