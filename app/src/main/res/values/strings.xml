@@ -216,7 +216,7 @@
     <string name="ussd_fee_none">Aucun</string>
     <string name="ussd_op_credit_me">Crédit pour mon numéro</string>
     <string name="ussd_op_offer_me">Offre pour mon numéro</string>
-    <string name="ussd_next_secret">La fenêtre Yas va s\'ouvrir et te demander ton code secret. Vérifie ce qu\'elle affiche avant de le taper.</string>
+    <string name="ussd_next_secret">Yas va te demander ton code secret. Vérifie le nom et le montant avant de le taper.</string>
     <string name="ussd_low_balance">Ton solde MVola (%1$s) semble trop bas</string>
     <string name="ussd_low_balance_body">Tu peux quand même lancer : Yas refusera si le solde ne suffit pas.</string>
     <string name="ussd_error_number">Ce n\'est pas un numéro Yas (034 ou 038, 10 chiffres)</string>
@@ -244,7 +244,7 @@
     <string name="ussd_yes">Oui</string>
     <string name="ussd_description_label">Description (facultatif)</string>
     <string name="ussd_description_hint">Vide : Yas te la demandera.</string>
-    <string name="ussd_next_description">La fenêtre Yas va te demander la description, puis ton code secret. Vérifie le nom et le montant affichés par Yas avant de le taper.</string>
+    <string name="ussd_next_description">Yas va te demander la description, puis ton code secret.</string>
     <string name="mvola_section_money">Argent</string>
     <string name="mvola_send_short">Envoyer</string>
     <string name="mvola_withdraw">Retirer</string>
@@ -287,7 +287,7 @@
     <string name="ussd_paid_airtime">Payée avec le crédit</string>
     <string name="ussd_instant_title">Achat immédiat, sans code secret</string>
     <string name="ussd_instant_body">Le code #322 achète l\'offre dès que tu touches Lancer, avec ton crédit téléphone. Vérifie bien l\'offre.</string>
-    <string name="ussd_resume_hint">Si Yas demande de reprendre la session précédente, réponds 2 (Non).</string>
+    <string name="ussd_resume_hint">Si Yas propose de reprendre une session, réponds 2.</string>
     <!-- Choisir un numero : recherche + contacts du telephone -->
     <string name="ussd_search_people">Nom ou numéro</string>
     <string name="ussd_clear">Effacer la recherche</string>
@@ -308,7 +308,7 @@
     <string name="ussd_error_mobile_number">Numéro invalide : 10 chiffres, commençant par 034, 038, 032, 033 ou 037</string>
     <string name="ussd_number_other_operator">Numéro %1$s, pas dans tes contacts</string>
     <string name="ussd_row_network">Réseau</string>
-    <string name="ussd_coupon_hint">Si Yas propose de créer un coupon, ce numéro n\'a pas de compte MVola : annule et vérifie le numéro.</string>
+    <string name="ussd_coupon_hint">Si Yas propose de créer un coupon, le numéro n\'a pas de compte MVola : annule.</string>
     <!-- Remplissage automatique (service d'accessibilite) -->
     <string name="autofill_service_label">Volako : remplissage MVola</string>
     <string name="autofill_service_description">Tape pour toi la description d\'un envoi MVola dans la fenêtre Yas, et répond « Non » quand Yas propose de reprendre une ancienne session. Volako agit seulement dans la fenêtre Yas, pendant 90 secondes après ton appui sur Lancer. Il ne lit jamais ton code secret et ne le tape jamais.</string>
@@ -316,12 +316,16 @@
     <string name="autofill_row_on">Activé · Volako tape la description pour toi</string>
     <string name="autofill_row_off">Désactivé · touche pour l\'activer</string>
     <string name="autofill_dialog_title">Remplissage automatique</string>
-    <string name="autofill_dialog_body">Pour que Volako tape la description dans la fenêtre Yas à ta place, active « Volako : remplissage MVola » dans Réglages &gt; Accessibilité.\n\nVolako agit seulement dans la fenêtre Yas, pendant 90 secondes après ton appui sur Lancer. Il ne lit jamais ton code secret et ne le tape jamais.</string>
+    <string name="autofill_dialog_body">Pour que Volako tape la description dans la fenêtre Yas à ta place, active « Volako : remplissage MVola ».
+
+Sur Samsung : Réglages &gt; Accessibilité &gt; Applications installées.
+
+Volako agit seulement dans la fenêtre Yas, pendant 90 secondes après ton appui sur Lancer. Il ne lit jamais ton code secret et ne le tape jamais.</string>
     <string name="autofill_dialog_open">Ouvrir les réglages</string>
     <string name="autofill_dialog_later">Plus tard</string>
     <string name="autofill_copied">Description copiée : colle-la dans la fenêtre Yas</string>
-    <string name="ussd_description_auto">Volako la tapera pour toi dans la fenêtre Yas.</string>
-    <string name="ussd_description_copy">Elle sera copiée : tu la colleras dans la fenêtre Yas. Active le remplissage automatique pour gagner du temps.</string>
     <string name="ussd_activate">Activer</string>
-    <string name="ussd_next_fill">Quand Yas demandera la description, Volako tapera « %1$s ». Ensuite tape ton code secret, après avoir vérifié le nom et le montant.</string>
+    <string name="ussd_next_fill">Volako tapera « %1$s » pour toi, puis Yas te demandera ton code secret.</string>
+    <string name="ussd_next_copy">« %1$s » sera copiée : colle-la quand Yas demande la description. Ton clavier la propose aussi.</string>
+    <string name="ussd_autofill_off_short">Remplissage automatique désactivé</string>
 </resources>

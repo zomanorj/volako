@@ -54,6 +54,7 @@ fun WithdrawSheet(
     val result = MvolaUssd.build(operation)
     val where = @Composable { Where(atAtm, onChange = { atAtm = it }) }
 
+    val scroll = rememberScrollState()
     ModalBottomSheet(
         onDismissRequest = onDismiss,
         sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
@@ -63,7 +64,8 @@ fun WithdrawSheet(
                 .padding(horizontal = Spacing.lg)
                 .navigationBarsPadding()
                 .padding(bottom = Spacing.lg)
-                .verticalScroll(rememberScrollState()),
+                // l'etape "choisir un numero" a sa propre liste qui defile (LazyColumn) : pas de double defilement
+                .then(if (!atAtm && agent == null) Modifier else Modifier.verticalScroll(scroll)),
             verticalArrangement = Arrangement.spacedBy(Spacing.lg),
         ) {
             when {

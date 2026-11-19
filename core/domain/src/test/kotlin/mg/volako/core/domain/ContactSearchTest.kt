@@ -55,4 +55,12 @@ class ContactSearchTest {
         val r = ContactSearch.search("", emptyList(), many, yasOnly, maxContacts = 20)
         assertEquals(20, r.contacts.size)
     }
+
+    @Test
+    fun `un contact sans nom passe a la fin sans faux nom`() {
+        val list = listOf(PhoneContact("+261349998877", "0349998877"), PhoneContact("Zoe", "0341112233"))
+        val r = ContactSearch.search("", emptyList(), list, yasOnly)
+        assertEquals(listOf("Zoe", null), r.contacts.map { it.name })
+        assertEquals(false, ContactSearch.namesByPhone(list).containsKey("0349998877"))
+    }
 }

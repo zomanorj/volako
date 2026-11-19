@@ -21,9 +21,12 @@ data class ContactResults(
 // Le nom du repertoire passe toujours avant le nom vu dans les SMS : c'est celui que l'utilisateur connait.
 object ContactSearch {
 
-    // numero -> nom du repertoire (le premier nom trouve si un numero est enregistre deux fois)
+    // numero -> nom du repertoire (le premier vrai nom si un numero est enregistre deux fois).
+    // Un contact enregistre sans nom a souvent son numero comme nom : ce n'est pas un nom.
     fun namesByPhone(contacts: List<PhoneContact>): Map<String, String> =
-        contacts.groupBy { it.phone }.mapValues { (_, list) -> list.first().name }
+        contacts.filter { isRealName(it.name) }.groupBy { it.phone }.mapValues { (_, list) -> list.first().name }
+
+    fun isRealName(name: String?): Boolean = name != null && name.any { it.isLetter() }
 
     fun search(
         query: String,
@@ -38,7 +41,7 @@ object ContactSearch {
 
         val suggestions = recents
             .filter { accept(it.phone) }
-            .map { ContactSuggestion(it.phone, names[it.phone] ?: it.name, recent = true) }
+            .map { ContactSuggestion(it.phone, names[it.phone] ?: it.name?.takeIf(::isRealName), recent = true) }
             .filter { matches(it, query) }
             .take(maxSuggestions)
 
@@ -46,9 +49,10 @@ object ContactSearch {
         val others = contacts
             .filter { accept(it.phone) && it.phone !in shown }
             .distinctBy { it.phone }
-            .map { ContactSuggestion(it.phone, it.name, recent = it.phone in recentPhones) }
+            .map { ContactSuggestion(it.phone, it.name.takeIf(::isRealName), recent = it.phone in recentPhones) }
             .filter { matches(it, query) }
-            .sortedBy { normalize(it.name.orEmpty()) }
+            // les vrais noms par ordre alphabetique, les numeros sans nom a la fin
+            .sortedWith(compareBy<ContactSuggestion> { it.name == null }.thenBy { normalize(it.name.orEmpty()) }.thenBy { it.phone })
             .take(maxContacts)
 
         return ContactResults(suggestions, others)

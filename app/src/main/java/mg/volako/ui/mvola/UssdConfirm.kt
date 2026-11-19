@@ -1,5 +1,6 @@
 package mg.volako.ui.mvola
 
+import androidx.annotation.DrawableRes
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -51,7 +52,10 @@ fun UssdConfirm(
     onSaveFavorite: (() -> Unit)? = null,
     editLabel: String = stringResource(R.string.ussd_edit),
     footer: @Composable () -> Unit = {},
+    // petites astuces propres a l'operation (ex : coupon pour un envoi)
+    tips: List<String> = emptyList(),
 ) {
+    val autofillOn = rememberAutofillEnabled()
     // le code change (montant, description...) : le bouton favori redevient actif
     var saved by rememberSaveable(request.code) { mutableStateOf(false) }
     Column(verticalArrangement = Arrangement.spacedBy(Spacing.lg)) {
@@ -72,10 +76,17 @@ fun UssdConfirm(
         if (launchEnabled) {
             when (request.next) {
                 NextOnPhone.SECRET_CODE -> SecretNote(stringResource(R.string.ussd_next_secret))
-                NextOnPhone.DESCRIPTION -> SecretNote(
-                    request.fillDescription?.let { stringResource(R.string.ussd_next_fill, it) }
-                        ?: stringResource(R.string.ussd_next_description),
-                )
+                // ce qui va VRAIMENT se passer : tape par Volako si le service est actif, sinon copie
+                NextOnPhone.DESCRIPTION -> {
+                    val fill = request.fillDescription
+                    SecretNote(
+                        when {
+                            fill == null -> stringResource(R.string.ussd_next_description)
+                            autofillOn -> stringResource(R.string.ussd_next_fill, fill)
+                            else -> stringResource(R.string.ussd_next_copy, fill)
+                        },
+                    )
+                }
                 // #322 : pas de code secret pour se rattraper, on previent clairement
                 NextOnPhone.INSTANT -> AlertBanner(
                     icon = DesignR.drawable.ic_report,
@@ -84,13 +95,12 @@ fun UssdConfirm(
                 )
                 NextOnPhone.RESULT -> Unit
             }
-            // vu en vrai : apres une session annulee, Yas demande s'il faut la reprendre
-            if (request.next == NextOnPhone.SECRET_CODE || request.next == NextOnPhone.DESCRIPTION) {
-                Text(
-                    stringResource(R.string.ussd_resume_hint),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
+            // les astuces en une seule ligne discrete (lisibilite : pas un mur de texte).
+            // "reprendre la session" : inutile quand Volako repond tout seul
+            val goesToYas = request.next == NextOnPhone.SECRET_CODE || request.next == NextOnPhone.DESCRIPTION
+            val allTips = tips + listOfNotNull(stringResource(R.string.ussd_resume_hint).takeIf { goesToYas && !autofillOn })
+            if (allTips.isNotEmpty()) {
+                SecretNote(allTips.joinToString("\n"), icon = DesignR.drawable.ic_help)
             }
         }
 
@@ -125,10 +135,10 @@ fun UssdConfirm(
 
 // petit rappel avec un cadenas : le code secret reste dans la fenetre Yas
 @Composable
-fun SecretNote(text: String, modifier: Modifier = Modifier) {
+fun SecretNote(text: String, modifier: Modifier = Modifier, @DrawableRes icon: Int = DesignR.drawable.ic_lock) {
     Row(modifier, horizontalArrangement = Arrangement.spacedBy(Spacing.sm), verticalAlignment = Alignment.Top) {
         Icon(
-            painterResource(DesignR.drawable.ic_lock),
+            painterResource(icon),
             null,
             Modifier.size(Sizes.icon * 0.8f),
             tint = MaterialTheme.colorScheme.onSurfaceVariant,

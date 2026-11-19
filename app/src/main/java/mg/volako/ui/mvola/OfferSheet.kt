@@ -94,6 +94,7 @@ fun OfferSheet(
         }
     }
 
+    val scroll = rememberScrollState()
     ModalBottomSheet(
         onDismissRequest = onDismiss,
         sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
@@ -102,7 +103,8 @@ fun OfferSheet(
             Modifier
                 .navigationBarsPadding()
                 .padding(bottom = Spacing.lg)
-                .verticalScroll(rememberScrollState()),
+                // l'etape "choisir un numero" a sa propre liste qui defile (LazyColumn) : pas de double defilement
+                .then(if (forOther && recipient == null) Modifier else Modifier.verticalScroll(scroll)),
             verticalArrangement = Arrangement.spacedBy(Spacing.lg),
         ) {
             val operation = chosen?.let(::operationFor)

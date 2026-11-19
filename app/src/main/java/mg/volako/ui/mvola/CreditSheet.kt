@@ -54,6 +54,7 @@ fun CreditSheet(
         if (forOther) UssdOperation.CreditForOther(recipient?.number?.digits.orEmpty(), amount) else UssdOperation.CreditForMe(amount)
     val result = MvolaUssd.build(operation)
 
+    val scroll = rememberScrollState()
     ModalBottomSheet(
         onDismissRequest = onDismiss,
         sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
@@ -63,7 +64,8 @@ fun CreditSheet(
                 .padding(horizontal = Spacing.lg)
                 .navigationBarsPadding()
                 .padding(bottom = Spacing.lg)
-                .verticalScroll(rememberScrollState()),
+                // l'etape "choisir un numero" a sa propre liste qui defile (LazyColumn) : pas de double defilement
+                .then(if (forOther && recipient == null) Modifier else Modifier.verticalScroll(scroll)),
             verticalArrangement = Arrangement.spacedBy(Spacing.lg),
         ) {
             when {

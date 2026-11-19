@@ -5,6 +5,10 @@ import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.ui.draw.clip
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -85,104 +89,182 @@ fun RecipientStep(
     val pasteNotFound = stringResource(R.string.ussd_paste_none)
     // seulement les numeros Yas (les autres operateurs ne passent pas par ces menus)
     val results = remember(query, people.recents, people.contacts) {
-        ContactSearch.search(query, people.recents, people.contacts, accept = { parse(it) != null })
+        ContactSearch.search(query, people.recents, people.contacts, accept = { parse(it) != null }, maxContacts = Int.MAX_VALUE)
     }
     val typedNumber = parse(query)
     val names = remember(people.contacts) { ContactSearch.namesByPhone(people.contacts) }
     val looksLikeNumber = query.count(Char::isDigit) >= 10 && query.none(Char::isLetter)
 
-    Column(verticalArrangement = Arrangement.spacedBy(Spacing.lg)) {
-        Text(title, style = MaterialTheme.typography.titleLarge)
-        header()
-        if (padMode) {
+    // pave : petit ecran fixe, pas besoin de liste
+    if (padMode) {
+        Column(verticalArrangement = Arrangement.spacedBy(Spacing.lg)) {
+            Text(title, style = MaterialTheme.typography.titleLarge)
+            header()
             NumberPad(names = names, onChosen = onChosen, onBack = { padMode = false }, allowOtherOperators = allowOtherOperators)
-            return@Column
         }
-        OutlinedTextField(
-            value = query,
-            onValueChange = { query = it.take(40) },
-            placeholder = { Text(stringResource(R.string.ussd_search_people)) },
-            singleLine = true,
-            isError = looksLikeNumber && typedNumber == null,
-            supportingText = { if (looksLikeNumber && typedNumber == null) Text(stringResource(R.string.ussd_error_number)) },
-            leadingIcon = { Icon(painterResource(DesignR.drawable.ic_search), null) },
-            trailingIcon = {
-                if (query.isNotEmpty()) {
-                    IconButton(onClick = { query = "" }) {
-                        Icon(painterResource(DesignR.drawable.ic_close), stringResource(R.string.ussd_clear))
-                    }
-                }
-            },
-            keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Words, imeAction = ImeAction.Done),
-            modifier = Modifier.fillMaxWidth(),
-        )
+        return
+    }
 
-        // bien visible : on peut toujours taper ou coller un numero qui n'est pas un contact
-        NumberShortcuts(
-            showPaste = remember { clipboardHasText(context) },
-            onType = { padMode = true },
-            onPaste = {
-                val pasted = pastedNumber(context, allowOtherOperators)
-                if (pasted != null) {
-                    onChosen(Recipient(pasted, names[pasted.digits]))
-                } else {
-                    Toast.makeText(context, pasteNotFound, Toast.LENGTH_SHORT).show()
-                }
-            },
-        )
+    // tous les contacts, regroupes par lettre (comme l'appli Contacts du telephone)
+    val groups = remember(results.contacts) { results.contacts.groupBy { letterOf(it.name) } }
+    val showPaste = remember { clipboardHasText(context) }
 
-        // un numero complet tape a la main : on le propose tout en haut
-        if (typedNumber != null) {
-            PersonRow(
-                name = names[typedNumber.digits] ?: stringResource(R.string.ussd_use_number),
-                number = typedNumber.pretty(),
-                onClick = { onChosen(Recipient(typedNumber, names[typedNumber.digits])) },
-                highlighted = true,
-            )
+    // LazyColumn : seules les lignes visibles sont dessinees, meme avec des centaines de contacts
+    LazyColumn(verticalArrangement = Arrangement.spacedBy(Spacing.sm)) {
+        item(key = "top") {
+            Column(verticalArrangement = Arrangement.spacedBy(Spacing.lg), modifier = Modifier.padding(bottom = Spacing.sm)) {
+                Text(title, style = MaterialTheme.typography.titleLarge)
+                header()
+                OutlinedTextField(
+                    value = query,
+                    onValueChange = { query = it.take(40) },
+                    placeholder = { Text(stringResource(R.string.ussd_search_people)) },
+                    singleLine = true,
+                    isError = looksLikeNumber && typedNumber == null,
+                    // place reservee seulement quand il y a vraiment un message (sinon un grand vide)
+                    supportingText = if (looksLikeNumber && typedNumber == null) {
+                        { Text(stringResource(if (allowOtherOperators) R.string.ussd_error_mobile_number else R.string.ussd_error_number)) }
+                    } else {
+                        null
+                    },
+                    leadingIcon = { Icon(painterResource(DesignR.drawable.ic_search), null) },
+                    trailingIcon = {
+                        if (query.isNotEmpty()) {
+                            IconButton(onClick = { query = "" }) {
+                                Icon(painterResource(DesignR.drawable.ic_close), stringResource(R.string.ussd_clear))
+                            }
+                        }
+                    },
+                    keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Words, imeAction = ImeAction.Done),
+                    modifier = Modifier.fillMaxWidth(),
+                )
+                // bien visible : on peut toujours taper ou coller un numero qui n'est pas un contact
+                NumberShortcuts(
+                    showPaste = showPaste,
+                    onType = { padMode = true },
+                    onPaste = {
+                        val pasted = pastedNumber(context, allowOtherOperators)
+                        if (pasted != null) {
+                            onChosen(Recipient(pasted, names[pasted.digits]))
+                        } else {
+                            Toast.makeText(context, pasteNotFound, Toast.LENGTH_SHORT).show()
+                        }
+                    },
+                )
+                // un numero complet tape a la main : on le propose tout en haut
+                if (typedNumber != null) {
+                    PersonRow(
+                        name = names[typedNumber.digits] ?: stringResource(R.string.ussd_use_number),
+                        number = numberLine(typedNumber, withName = true),
+                        onClick = { onChosen(Recipient(typedNumber, names[typedNumber.digits])) },
+                        highlighted = true,
+                    )
+                }
+                if (!people.contactsAllowed) ContactsPermissionCard(people.onContactsAllowed, parse, onPicked = onChosen)
+            }
         }
 
-        if (!people.contactsAllowed) ContactsPermissionCard(people.onContactsAllowed, parse, onPicked = onChosen)
-
+        // les recents : en cartes, pour qu'on les voie tout de suite
         if (results.suggestions.isNotEmpty()) {
-            SectionHeader(stringResource(R.string.ussd_suggestions))
-            PeopleList(results.suggestions, parse, onChosen)
+            item(key = "suggestions") { SectionHeader(stringResource(R.string.ussd_suggestions)) }
+            items(results.suggestions, key = { "s" + it.phone }) { s ->
+                val number = parse(s.phone) ?: return@items
+                PersonRow(
+                    name = s.name ?: number.pretty(),
+                    hasName = s.name != null,
+                    number = numberLine(number, withName = s.name != null),
+                    onClick = { onChosen(Recipient(number, s.name)) },
+                )
+            }
         }
+
+        // le repertoire : lignes simples et compactes, une lettre repere qui reste en haut
         if (results.contacts.isNotEmpty()) {
-            SectionHeader(stringResource(R.string.ussd_contacts))
-            PeopleList(results.contacts, parse, onChosen)
+            item(key = "contacts") {
+                SectionHeader(stringResource(R.string.ussd_contacts), modifier = Modifier.padding(top = Spacing.md))
+            }
+            groups.forEach { (letter, list) ->
+                stickyHeader(key = "h$letter") { LetterHeader(letter) }
+                items(list, key = { "c" + it.phone }) { s ->
+                    val number = parse(s.phone) ?: return@items
+                    ContactLine(
+                        name = s.name,
+                        number = numberLine(number, withName = true),
+                        onClick = { onChosen(Recipient(number, s.name)) },
+                    )
+                }
+            }
         }
+
         if (query.isNotBlank() && typedNumber == null && results.suggestions.isEmpty() && results.contacts.isEmpty()) {
-            Text(
-                stringResource(R.string.ussd_no_match),
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-            TextButton(onClick = { padMode = true }) { Text(stringResource(R.string.ussd_type_number)) }
+            item(key = "empty") {
+                Column {
+                    Text(
+                        stringResource(R.string.ussd_no_match),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                    TextButton(onClick = { padMode = true }) { Text(stringResource(R.string.ussd_type_number)) }
+                }
+            }
         }
     }
 }
 
+// "034 20 454 85" ; le reseau seulement hors Yas
+private fun numberLine(number: MgNumber, withName: Boolean): String? = when {
+    !number.isYas -> "${number.pretty()} · ${number.operator.label}"
+    withName -> number.pretty()
+    else -> null
+}
+
+// lettre du groupe : premiere lettre du nom sans accent, "#" pour les noms qui commencent par un chiffre ou sans nom
+private fun letterOf(name: String?): String {
+    val c = name?.trim()?.firstOrNull() ?: return "#"
+    val plain = java.text.Normalizer.normalize(c.toString(), java.text.Normalizer.Form.NFD).firstOrNull() ?: c
+    return if (plain.isLetter()) plain.uppercase() else "#"
+}
+
+// lettre repere collee en haut pendant le defilement (fond opaque pour cacher les lignes dessous)
 @Composable
-private fun PeopleList(list: List<ContactSuggestion>, parse: (String) -> MgNumber?, onChosen: (Recipient) -> Unit) {
-    Column(verticalArrangement = Arrangement.spacedBy(Spacing.sm)) {
-        list.forEach { s ->
-            val number = parse(s.phone) ?: return@forEach
-            PersonRow(
-                name = s.name ?: number.pretty(),
-                number = when {
-                    !number.isYas -> "${number.pretty()} · ${number.operator.label}"
-                    s.name != null -> number.pretty()
-                    else -> null
-                },
-                onClick = { onChosen(Recipient(number, s.name)) },
-            )
+private fun LetterHeader(letter: String) {
+    Text(
+        letter,
+        style = MaterialTheme.typography.labelLarge,
+        color = MaterialTheme.colorScheme.primary,
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(MaterialTheme.colorScheme.surfaceContainerLow)
+            .padding(vertical = Spacing.xs),
+    )
+}
+
+// ligne de contact simple (plus dense qu'une carte : on en voit beaucoup plus a l'ecran)
+@Composable
+private fun ContactLine(name: String?, number: String?, onClick: () -> Unit) {
+    Row(
+        Modifier
+            .fillMaxWidth()
+            .heightIn(min = 56.dp)
+            .clip(MaterialTheme.shapes.small)
+            .clickable(onClick = onClick)
+            .padding(vertical = Spacing.xs),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(Spacing.md),
+    ) {
+        Initial(name)
+        Column(Modifier.weight(1f)) {
+            Text(name ?: number.orEmpty(), style = MaterialTheme.typography.bodyLarge, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            if (name != null && number != null) {
+                Text(number, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
         }
     }
 }
 
 // une personne : pastille avec l'initiale, nom en gros, numero en dessous
 @Composable
-private fun PersonRow(name: String, number: String?, onClick: () -> Unit, highlighted: Boolean = false) {
+private fun PersonRow(name: String, number: String?, onClick: () -> Unit, highlighted: Boolean = false, hasName: Boolean = true) {
     val colors = MaterialTheme.colorScheme
     Surface(
         onClick = onClick,
@@ -197,7 +279,7 @@ private fun PersonRow(name: String, number: String?, onClick: () -> Unit, highli
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(Spacing.md),
         ) {
-            Initial(name)
+            Initial(name.takeIf { hasName })
             Column(Modifier.weight(1f)) {
                 Text(name, style = MaterialTheme.typography.titleMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 if (number != null) {
@@ -208,17 +290,22 @@ private fun PersonRow(name: String, number: String?, onClick: () -> Unit, highli
     }
 }
 
-// rond avec la premiere lettre du nom (plus facile a reperer qu'une icone toute pareille)
+// rond avec la premiere lettre du nom (plus facile a reperer qu'une icone toute pareille).
+// Sans nom : une icone de personne (un chiffre dans le rond ne voudrait rien dire)
 @Composable
-private fun Initial(name: String) {
-    val letter = name.firstOrNull { it.isLetterOrDigit() }?.uppercaseChar()?.toString() ?: "#"
+private fun Initial(name: String?) {
+    val letter = name?.firstOrNull { it.isLetterOrDigit() }?.uppercaseChar()?.toString()
     Box(
         Modifier
             .size(40.dp)
             .background(MaterialTheme.colorScheme.secondaryContainer, CircleShape),
         contentAlignment = Alignment.Center,
     ) {
-        Text(letter, style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onSecondaryContainer)
+        if (letter != null) {
+            Text(letter, style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onSecondaryContainer)
+        } else {
+            Icon(painterResource(DesignR.drawable.ic_person), null, Modifier.size(20.dp), tint = MaterialTheme.colorScheme.onSecondaryContainer)
+        }
     }
 }
 

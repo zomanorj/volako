@@ -2,6 +2,7 @@ package mg.volako.ui.mvola
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.navigationBarsPadding
@@ -26,6 +27,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
@@ -62,6 +64,7 @@ fun SendSheet(
     val operation = UssdOperation.Send(recipient?.number?.digits.orEmpty(), amount, payRecipientFee = payFee, description = description)
     val result = MvolaUssd.build(operation)
 
+    val scroll = rememberScrollState()
     ModalBottomSheet(
         onDismissRequest = onDismiss,
         sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
@@ -72,7 +75,8 @@ fun SendSheet(
                 .navigationBarsPadding()
                 .imePadding()
                 .padding(bottom = Spacing.lg)
-                .verticalScroll(rememberScrollState()),
+                // l'etape "choisir un numero" a sa propre liste qui defile (LazyColumn) : pas de double defilement
+                .then(if (recipient == null) Modifier else Modifier.verticalScroll(scroll)),
             verticalArrangement = Arrangement.spacedBy(Spacing.lg),
         ) {
             when {
@@ -103,6 +107,8 @@ fun SendSheet(
                         onLaunch = { (result as? UssdResult.Ready)?.let { onLaunch(it.request) } },
                         onEdit = { confirming = false },
                         onSaveFavorite = { favoriteOf(operation, recipient.name)?.let(onSaveFavorite) },
+                        // vu par l'utilisateur : numero inconnu ou sans compte -> Yas propose un "coupon"
+                        tips = listOf(stringResource(R.string.ussd_coupon_hint)),
                         options = {
                             SendOptions(
                                 // vers Orange / Airtel, Yas ne pose pas la question des frais de retrait
@@ -169,28 +175,28 @@ private fun SendOptions(
             label = { Text(stringResource(R.string.ussd_description_label)) },
             singleLine = true,
             isError = error != null,
-            supportingText = {
-                Text(
-                    error ?: when {
-                        !hasLetters -> stringResource(R.string.ussd_description_hint)
-                        autofillOn -> stringResource(R.string.ussd_description_auto)
-                        else -> stringResource(R.string.ussd_description_copy)
-                    },
-                )
+            // le rappel en dessous explique deja ce qui va se passer : ici seulement l'erreur ou l'aide courte
+            supportingText = when {
+                error != null -> { { Text(error) } }
+                !hasLetters -> { { Text(stringResource(R.string.ussd_description_hint)) } }
+                else -> null
             },
             keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences, imeAction = ImeAction.Done),
             modifier = Modifier.fillMaxWidth(),
         )
-        if (hasLetters && !autofillOn) {
-            TextButton(onClick = { showAutofillDialog = true }) { Text(stringResource(R.string.ussd_activate)) }
+        // lettres sans remplissage auto : une seule ligne, avec l'action au bout
+        if (hasLetters && !autofillOn && error == null) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    stringResource(R.string.ussd_autofill_off_short),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.weight(1f),
+                )
+                TextButton(onClick = { showAutofillDialog = true }) { Text(stringResource(R.string.ussd_activate)) }
+            }
         }
         if (showAutofillDialog) AutofillDialog(onDismiss = { showAutofillDialog = false })
-        // vu par l'utilisateur : numero inconnu ou sans compte -> Yas propose un "coupon"
-        Text(
-            stringResource(R.string.ussd_coupon_hint),
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
     }
 }
 
