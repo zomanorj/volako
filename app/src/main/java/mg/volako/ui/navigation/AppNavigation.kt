@@ -61,6 +61,7 @@ import mg.volako.ui.entry.SavedEntry
 import mg.volako.ui.home.HomeScreen
 import mg.volako.ui.home.HomeViewModel
 import mg.volako.ui.month.MonthScreen
+import mg.volako.ui.mvola.MvolaScreen
 import mg.volako.ui.operations.OperationsScreen
 import mg.volako.ui.review.ReviewScreen
 import mg.volako.ui.wallet.CountWalletDialog
@@ -77,13 +78,17 @@ data object OperationsKey : NavKey
 data object MonthKey : NavKey
 
 @Serializable
+data object MvolaKey : NavKey
+
+@Serializable
 data object ReviewKey : NavKey
 
-// les 3 onglets de la barre du bas
+// les 4 onglets de la barre du bas
 private enum class Tab(val key: NavKey, @StringRes val label: Int, @DrawableRes val icon: Int) {
     HOME(HomeKey, R.string.nav_home, DesignR.drawable.ic_home),
     OPERATIONS(OperationsKey, R.string.nav_operations, DesignR.drawable.ic_format_list_bulleted),
     SUMMARY(MonthKey, R.string.nav_summary, DesignR.drawable.ic_bar_chart),
+    MVOLA(MvolaKey, R.string.nav_mvola, DesignR.drawable.ic_send_to_mobile),
 }
 
 // Le cadre de l'app : barre d'onglets + bouton Ajouter + fenetres partagees (saisie, modification,
@@ -211,6 +216,7 @@ fun VolakoApp(homeViewModel: HomeViewModel = viewModel(factory = HomeViewModel.F
                     OperationsScreen(contentPadding = padding, onEdit = { editingId = it }, onDelete = deleteWithUndo)
                 }
                 entry<MonthKey> { MonthScreen(modifier = Modifier.padding(bottom = padding.calculateBottomPadding())) }
+                entry<MvolaKey> { MvolaScreen(contentPadding = padding, mvolaBalance = state.balances.mvola) }
                 entry<ReviewKey> { ReviewScreen(onBack = { backStack.removeLastOrNull() }) }
             },
         )

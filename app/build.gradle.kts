@@ -12,8 +12,8 @@ android {
         applicationId = "mg.volako"
         minSdk = libs.versions.minSdk.get().toInt()
         targetSdk = libs.versions.targetSdk.get().toInt()
-        versionCode = 16
-        versionName = "1.5.1"
+        versionCode = 17
+        versionName = "1.6.0"
     }
 
     buildTypes {
@@ -32,6 +32,7 @@ android {
 dependencies {
     implementation(project(":core:designsystem"))
     implementation(project(":core:sms"))
+    implementation(project(":core:ussd"))
     implementation(project(":core:data"))
 
     implementation(libs.androidx.core.ktx)

@@ -166,6 +166,7 @@
     <string name="nav_home">Accueil</string>
     <string name="nav_operations">Opérations</string>
     <string name="nav_summary">Résumé</string>
+    <string name="nav_mvola">MVola</string>
     <string name="home_available">Disponible au total</string>
     <string name="home_latest">Dernières opérations</string>
     <string name="home_see_all">Tout voir</string>
@@ -184,4 +185,43 @@
     <string name="ops_filter_fees">Frais</string>
     <string name="ops_no_result">Aucune opération ne correspond</string>
     <string name="ops_no_result_hint">Essaie un autre mot ou un autre filtre.</string>
+    <!-- Onglet MVola (codes USSD prepares) -->
+    <string name="mvola_title">MVola</string>
+    <string name="mvola_balance">Solde MVola d\'après tes SMS : %1$s</string>
+    <string name="mvola_section_buy">Acheter</string>
+    <string name="mvola_section_check">Consulter</string>
+    <string name="mvola_credit">Crédit</string>
+    <string name="mvola_credit_sub">Pour mon numéro</string>
+    <string name="mvola_offer">Offre</string>
+    <string name="mvola_offer_sub">M\'Ora, First, Ye\'low, Net</string>
+    <string name="mvola_credit_balance">Solde crédit</string>
+    <string name="mvola_credit_balance_sub">Gratuit · #357#</string>
+    <string name="mvola_secret_note">Ton code secret se tape seulement dans la fenêtre Yas. Volako ne le voit jamais et ne l\'enregistre pas.</string>
+
+    <string name="ussd_credit_title">Crédit pour mon numéro</string>
+    <string name="ussd_offer_title">Acheter une offre</string>
+    <string name="ussd_continue">Continuer</string>
+    <string name="ussd_launch">Lancer</string>
+    <string name="ussd_edit">Modifier</string>
+    <string name="ussd_confirm_title">Vérifie avant de lancer</string>
+    <string name="ussd_row_operation">Opération</string>
+    <string name="ussd_row_amount">Montant</string>
+    <string name="ussd_row_offer">Offre</string>
+    <string name="ussd_row_content">Contenu</string>
+    <string name="ussd_row_price">Prix</string>
+    <string name="ussd_row_paid_with">Payé avec</string>
+    <string name="ussd_row_fee">Frais</string>
+    <string name="ussd_row_code">Code</string>
+    <string name="ussd_fee_none">Aucun</string>
+    <string name="ussd_op_credit_me">Crédit pour mon numéro</string>
+    <string name="ussd_op_offer_me">Offre pour mon numéro</string>
+    <string name="ussd_next_secret">La fenêtre Yas va s\'ouvrir et te demander ton code secret. Vérifie le montant affiché par Yas avant de le taper.</string>
+    <string name="ussd_low_balance">Ton solde MVola (%1$s) semble trop bas</string>
+    <string name="ussd_low_balance_body">Tu peux quand même lancer : Yas refusera si le solde ne suffit pas.</string>
+    <string name="ussd_error_number">Ce n\'est pas un numéro Yas (034 ou 038, 10 chiffres)</string>
+    <string name="ussd_error_small">Minimum %1$s</string>
+    <string name="ussd_error_big">Maximum %1$s</string>
+    <string name="ussd_error_desc_digits">Description en chiffres seulement</string>
+    <string name="ussd_error_desc_long">Description trop longue</string>
+    <string name="ussd_no_phone">Impossible d\'ouvrir le téléphone sur cet appareil</string>
 </resources>
