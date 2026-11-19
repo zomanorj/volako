@@ -16,6 +16,7 @@ object UssdAutofill {
 
     fun arm(description: String?) {
         job = Job(description, SystemClock.elapsedRealtime() + ARMED_FOR_MS)
+        UssdAutofillService.wake()
     }
 
     // null si rien a faire ou si le delai est passe
