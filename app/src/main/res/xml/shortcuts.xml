@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Raccourcis fixes : appui long sur l'icone Volako (doc officielle "Create static shortcuts") -->
+<shortcuts xmlns:android="http://schemas.android.com/apk/res/android">
+    <shortcut
+        android:shortcutId="mvola_send"
+        android:enabled="true"
+        android:icon="@drawable/shortcut_send"
+        android:shortcutShortLabel="@string/shortcut_send_short"
+        android:shortcutLongLabel="@string/shortcut_send_long">
+        <intent
+            android:action="mg.volako.action.MVOLA_SEND"
+            android:targetPackage="mg.volako"
+            android:targetClass="mg.volako.MainActivity" />
+    </shortcut>
+    <shortcut
+        android:shortcutId="mvola_withdraw"
+        android:enabled="true"
+        android:icon="@drawable/shortcut_withdraw"
+        android:shortcutShortLabel="@string/shortcut_withdraw_short"
+        android:shortcutLongLabel="@string/shortcut_withdraw_long">
+        <intent
+            android:action="mg.volako.action.MVOLA_WITHDRAW"
+            android:targetPackage="mg.volako"
+            android:targetClass="mg.volako.MainActivity" />
+    </shortcut>
+    <shortcut
+        android:shortcutId="mvola_credit"
+        android:enabled="true"
+        android:icon="@drawable/shortcut_credit"
+        android:shortcutShortLabel="@string/shortcut_credit_short"
+        android:shortcutLongLabel="@string/shortcut_credit_long">
+        <intent
+            android:action="mg.volako.action.MVOLA_CREDIT"
+            android:targetPackage="mg.volako"
+            android:targetClass="mg.volako.MainActivity" />
+    </shortcut>
+</shortcuts>

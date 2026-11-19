@@ -23,6 +23,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -55,12 +56,26 @@ private enum class MvolaSheet { SEND, WITHDRAW, CREDIT, OFFER }
 fun MvolaScreen(
     contentPadding: PaddingValues,
     mvolaBalance: Long,
+    entry: MvolaEntry? = null,
+    onEntryHandled: () -> Unit = {},
     viewModel: MvolaViewModel = viewModel(factory = MvolaViewModel.Factory),
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val launch = rememberUssdLauncher()
     var sheet by rememberSaveable { mutableStateOf<MvolaSheet?>(null) }
     var openFavoriteId by rememberSaveable { mutableStateOf<Long?>(null) }
+
+    // raccourci de l'icone : on ouvre directement la bonne fenetre (jamais de lancement automatique)
+    LaunchedEffect(entry) {
+        when (entry) {
+            MvolaEntry.Send -> sheet = MvolaSheet.SEND
+            MvolaEntry.Withdraw -> sheet = MvolaSheet.WITHDRAW
+            MvolaEntry.Credit -> sheet = MvolaSheet.CREDIT
+            is MvolaEntry.OpenFavorite -> openFavoriteId = entry.id
+            null -> return@LaunchedEffect
+        }
+        onEntryHandled()
+    }
 
     val launchAndClose = { request: UssdRequest ->
         sheet = null

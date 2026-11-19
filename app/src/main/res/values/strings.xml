@@ -271,4 +271,11 @@
     <string name="fav_withdraw">Retrait %1$s</string>
     <string name="fav_offer">%1$s</string>
     <string name="fav_for_me">Pour mon numéro</string>
+    <!-- Raccourcis de l'icone -->
+    <string name="shortcut_send_short">Envoyer</string>
+    <string name="shortcut_send_long">Envoyer de l\'argent</string>
+    <string name="shortcut_withdraw_short">Retirer</string>
+    <string name="shortcut_withdraw_long">Retirer de l\'argent</string>
+    <string name="shortcut_credit_short">Crédit</string>
+    <string name="shortcut_credit_long">Acheter du crédit</string>
 </resources>

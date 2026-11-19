@@ -1,20 +1,26 @@
 package mg.volako
 
+import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import mg.volako.core.designsystem.theme.VolakoTheme
+import mg.volako.ui.mvola.MvolaEntry
 import mg.volako.ui.navigation.VolakoApp
 import mg.volako.ui.onboarding.OnboardingScreen
 
 class MainActivity : ComponentActivity() {
 
     private val mainViewModel: MainViewModel by viewModels { MainViewModel.Factory }
+
+    // raccourci de l'icone a ouvrir (Envoyer, Retirer, un favori...), null une fois traite
+    private val entry = mutableStateOf<MvolaEntry?>(null)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         // doit etre appele avant super.onCreate (doc officielle SplashScreen)
@@ -23,6 +29,8 @@ class MainActivity : ComponentActivity() {
         // on garde le splash tant qu'on ne sait pas quel ecran afficher (evite un flash)
         splash.setKeepOnScreenCondition { mainViewModel.onboardingDone.value == null }
         enableEdgeToEdge()
+        // pas au retour d'une rotation : le raccourci a deja ete traite
+        if (savedInstanceState == null) entry.value = MvolaEntry.from(intent)
 
         setContent {
             VolakoTheme {
@@ -30,9 +38,15 @@ class MainActivity : ComponentActivity() {
                 when (onboardingDone) {
                     null -> Unit
                     false -> OnboardingScreen()
-                    true -> VolakoApp()
+                    true -> VolakoApp(entry = entry.value, onEntryHandled = { entry.value = null })
                 }
             }
         }
+    }
+
+    // l'app etait deja ouverte et on touche un raccourci
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        MvolaEntry.from(intent)?.let { entry.value = it }
     }
 }

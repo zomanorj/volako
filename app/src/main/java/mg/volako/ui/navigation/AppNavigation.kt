@@ -61,6 +61,7 @@ import mg.volako.ui.entry.SavedEntry
 import mg.volako.ui.home.HomeScreen
 import mg.volako.ui.home.HomeViewModel
 import mg.volako.ui.month.MonthScreen
+import mg.volako.ui.mvola.MvolaEntry
 import mg.volako.ui.mvola.MvolaScreen
 import mg.volako.ui.operations.OperationsScreen
 import mg.volako.ui.review.ReviewScreen
@@ -94,7 +95,11 @@ private enum class Tab(val key: NavKey, @StringRes val label: Int, @DrawableRes 
 // Le cadre de l'app : barre d'onglets + bouton Ajouter + fenetres partagees (saisie, modification,
 // comptage) + messages "Annuler". Les ecrans ne font qu'afficher et appeler ces actions.
 @Composable
-fun VolakoApp(homeViewModel: HomeViewModel = viewModel(factory = HomeViewModel.Factory)) {
+fun VolakoApp(
+    entry: MvolaEntry? = null,
+    onEntryHandled: () -> Unit = {},
+    homeViewModel: HomeViewModel = viewModel(factory = HomeViewModel.Factory),
+) {
     val backStack = rememberNavBackStack(HomeKey)
     val current = backStack.lastOrNull()
     val currentTab = Tab.entries.firstOrNull { it.key == current }
@@ -128,6 +133,11 @@ fun VolakoApp(homeViewModel: HomeViewModel = viewModel(factory = HomeViewModel.F
         backStack.clear()
         backStack.add(HomeKey)
         if (tab != Tab.HOME) backStack.add(tab.key)
+    }
+
+    // arrivee par un raccourci de l'icone : on va sur l'onglet MVola, l'ecran ouvre la bonne fenetre
+    LaunchedEffect(entry) {
+        if (entry != null && currentTab != Tab.MVOLA) select(Tab.MVOLA)
     }
 
     fun showUndo(message: String, onUndo: () -> Unit) {
@@ -216,7 +226,14 @@ fun VolakoApp(homeViewModel: HomeViewModel = viewModel(factory = HomeViewModel.F
                     OperationsScreen(contentPadding = padding, onEdit = { editingId = it }, onDelete = deleteWithUndo)
                 }
                 entry<MonthKey> { MonthScreen(modifier = Modifier.padding(bottom = padding.calculateBottomPadding())) }
-                entry<MvolaKey> { MvolaScreen(contentPadding = padding, mvolaBalance = state.balances.mvola) }
+                entry<MvolaKey> {
+                    MvolaScreen(
+                        contentPadding = padding,
+                        mvolaBalance = state.balances.mvola,
+                        entry = entry,
+                        onEntryHandled = onEntryHandled,
+                    )
+                }
                 entry<ReviewKey> { ReviewScreen(onBack = { backStack.removeLastOrNull() }) }
             },
         )
