@@ -12,6 +12,10 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.SegmentedButton
+import androidx.compose.material3.SegmentedButtonDefaults
+import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.SuggestionChip
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -23,7 +27,11 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.withStyle
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.unit.dp
 import mg.volako.R
 import mg.volako.core.designsystem.component.NumericKeypad
@@ -32,51 +40,65 @@ import mg.volako.core.designsystem.theme.Spacing
 import mg.volako.core.ussd.YasNumber
 import mg.volako.core.designsystem.R as DesignR
 
-// Taper un numero inconnu : gros pave (comme pour les montants), mise en forme en direct,
-// nom du repertoire si on le connait, prefixes 034 / 038 en un appui.
+// Taper un numero inconnu : on choisit le prefixe (034 deja choisi), puis on tape
+// SEULEMENT les 7 chiffres qui suivent, sur un gros pave (comme pour les montants).
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun NumberPad(
     names: Map<String, String>,
     onChosen: (Recipient) -> Unit,
     onBack: () -> Unit,
+    prefixes: List<String> = listOf("034", "038"),
 ) {
-    var digits by rememberSaveable { mutableStateOf("") }
-    val number = YasNumber.parse(digits)
-    val wrongStart = YasNumber.cannotBeYas(digits)
+    var prefix by rememberSaveable { mutableStateOf(prefixes.first()) }
+    // les 7 chiffres apres le prefixe
+    var rest by rememberSaveable { mutableStateOf("") }
+    val number = YasNumber.parse(prefix + rest)
     val knownName = number?.let { names[it.digits] }
+    val colors = MaterialTheme.colorScheme
 
     Column(verticalArrangement = Arrangement.spacedBy(Spacing.lg)) {
-        // le numero en grand, avec des tirets pour les chiffres qui manquent
-        Text(
-            YasNumber.formatPartial(digits).ifEmpty { "034 ·· ··· ··" },
-            style = AmountTextStyle.Hero,
-            color = if (digits.isEmpty()) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.onSurface,
-            textAlign = TextAlign.Center,
-            modifier = Modifier.fillMaxWidth(),
-        )
-        // ligne d'aide : nom connu, erreur, ou rien
-        Text(
-            when {
-                wrongStart -> stringResource(R.string.ussd_number_wrong_start)
-                knownName != null -> knownName
-                number != null -> stringResource(R.string.ussd_number_unknown)
-                else -> " "
-            },
-            style = MaterialTheme.typography.titleMedium,
-            color = if (wrongStart) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary,
-            textAlign = TextAlign.Center,
-            modifier = Modifier.fillMaxWidth(),
-        )
-        if (digits.isEmpty()) {
-            Row(horizontalArrangement = Arrangement.spacedBy(Spacing.sm)) {
-                listOf("034", "038").forEach { p ->
-                    SuggestionChip(onClick = { digits = p }, label = { Text(p) })
-                }
+        // 1) le prefixe : un vrai choix, deja rempli
+        SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth()) {
+            prefixes.forEachIndexed { index, p ->
+                SegmentedButton(
+                    selected = prefix == p,
+                    onClick = { prefix = p },
+                    shape = SegmentedButtonDefaults.itemShape(index, prefixes.size),
+                ) { Text(p) }
             }
         }
+
+        // 2) le numero en grand : prefixe + chiffres tapes + points pour ce qui manque
+        Text(
+            buildAnnotatedString {
+                val typed = group(prefix + rest)
+                val full = group(prefix + rest.padEnd(REST_LENGTH, PLACEHOLDER))
+                withStyle(SpanStyle(color = colors.onSurface)) { append(typed) }
+                withStyle(SpanStyle(color = colors.outline)) { append(full.drop(typed.length)) }
+            },
+            style = AmountTextStyle.Hero.copy(fontSize = 38.sp),
+            textAlign = TextAlign.Center,
+            maxLines = 1,
+            modifier = Modifier.fillMaxWidth(),
+        )
+
+        // 3) une seule ligne d'aide, toujours a la meme place (l'ecran ne saute pas)
+        Text(
+            when {
+                knownName != null -> knownName
+                number != null -> stringResource(R.string.ussd_number_unknown)
+                else -> stringResource(R.string.ussd_number_hint, prefix)
+            },
+            style = MaterialTheme.typography.titleSmall,
+            color = if (knownName != null) colors.primary else colors.onSurfaceVariant,
+            textAlign = TextAlign.Center,
+            modifier = Modifier.fillMaxWidth(),
+        )
+
         NumericKeypad(
-            onDigits = { if (digits.length < 10) digits = (digits + it).take(10) },
-            onBackspace = { digits = digits.dropLast(1) },
+            onDigits = { if (rest.length < REST_LENGTH) rest = (rest + it).take(REST_LENGTH) },
+            onBackspace = { rest = rest.dropLast(1) },
             backspaceDescription = stringResource(R.string.entry_backspace),
             bottomLeftKey = null,
         )
@@ -89,6 +111,20 @@ fun NumberPad(
             Text(stringResource(R.string.ussd_back_to_contacts))
         }
     }
+}
+
+// un numero = prefixe (3 chiffres) + 7 chiffres
+private const val REST_LENGTH = 7
+private const val PLACEHOLDER = '•'
+
+// "034204••" -> "034 20 4•• ••" : decoupage 3-2-3-2, en gardant les points des chiffres manquants
+private fun group(s: String): String {
+    val sizes = listOf(3, 2, 3, 2)
+    var start = 0
+    return sizes.mapNotNull { size ->
+        if (start >= s.length) return@mapNotNull null
+        s.substring(start, minOf(start + size, s.length)).also { start += size }
+    }.joinToString(" ")
 }
 
 // Le presse-papiers contient du texte ? (on regarde seulement le type, sans lire : pas d'alerte Android)

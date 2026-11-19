@@ -301,7 +301,7 @@
     <string name="ussd_type_number">Taper un numéro</string>
     <string name="ussd_paste_number">Coller un numéro</string>
     <string name="ussd_paste_none">Pas de numéro Yas dans ce que tu as copié</string>
-    <string name="ussd_number_wrong_start">Un numéro Yas commence par 034 ou 038</string>
+    <string name="ussd_number_hint">Tape les 7 chiffres après %1$s</string>
     <string name="ussd_number_unknown">Numéro pas dans tes contacts</string>
     <string name="ussd_back_to_contacts">Revenir aux contacts</string>
 </resources>

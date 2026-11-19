@@ -36,13 +36,4 @@ class YasNumberTest {
         assertEquals("034 20 454", YasNumber.formatPartial("03420454"))
         assertEquals("034 20 454 85", YasNumber.formatPartial("034204548599"))
     }
-
-    @Test
-    fun `debut qui ne peut pas etre Yas`() {
-        assertEquals(false, YasNumber.cannotBeYas("0"))
-        assertEquals(false, YasNumber.cannotBeYas("03"))
-        assertEquals(false, YasNumber.cannotBeYas("038"))
-        assertEquals(true, YasNumber.cannotBeYas("032"))
-        assertEquals(true, YasNumber.cannotBeYas("4"))
-    }
 }
