@@ -49,6 +49,8 @@ import mg.volako.core.designsystem.R as DesignR
 @Composable
 fun SwipeableTransactionRow(
     transaction: Transaction,
+    // nom du repertoire du telephone pour ce numero (prioritaire sur le nom du SMS)
+    contactName: String?,
     onEdit: () -> Unit,
     onDelete: () -> Unit,
     modifier: Modifier = Modifier,
@@ -82,7 +84,7 @@ fun SwipeableTransactionRow(
             }
         },
     ) {
-        TransactionRow(transaction, Modifier.clickable(onClick = onEdit))
+        TransactionRow(transaction, contactName, Modifier.clickable(onClick = onEdit))
     }
 }
 
@@ -110,7 +112,9 @@ private fun SwipeBackground(direction: SwipeToDismissBoxValue) {
 }
 
 @Composable
-fun TransactionRow(t: Transaction, modifier: Modifier = Modifier) {
+fun TransactionRow(t: Transaction, contactName: String? = null, modifier: Modifier = Modifier) {
+    // le nom que l'utilisateur connait (son repertoire) avant celui ecrit par MVola
+    val person = contactName ?: t.counterpartyName
     val f = VolakoTheme.finance
     val neutral = MaterialTheme.colorScheme.onSurfaceVariant
     // une couleur = un sens : vert pour ce qui entre, ambre pour les fuites, le reste neutre
@@ -137,14 +141,14 @@ fun TransactionRow(t: Transaction, modifier: Modifier = Modifier) {
             if (t.type == TransactionType.INCOME) R.string.home_untracked_income else R.string.home_untracked_expense,
         )
         // pour les anciens SMS deja enregistres avec une raison comme "37"
-        t.source == TransactionSource.SMS -> SmsTransactionMapper.meaningfulReason(t.label) ?: t.counterpartyName ?: "—"
-        else -> t.label ?: t.counterpartyName ?: "—"
+        t.source == TransactionSource.SMS -> SmsTransactionMapper.meaningfulReason(t.label) ?: person ?: "—"
+        else -> t.label ?: person ?: "—"
     }
     // sous-titre : la personne (si le titre est deja un libelle), le compte, l'heure
     val account = stringResource(if (t.account == Account.CASH) R.string.home_cash else R.string.home_mvola)
     val subtitle = listOfNotNull(
-        t.counterpartyPhone?.takeIf { creditForOther }?.let { stringResource(R.string.home_credit_to, formatPhone(it)) },
-        t.counterpartyName?.takeIf { it != title && t.type != TransactionType.TRANSFER },
+        t.counterpartyPhone?.takeIf { creditForOther }?.let { stringResource(R.string.home_credit_to, contactName ?: formatPhone(it)) },
+        person?.takeIf { it != title && t.type != TransactionType.TRANSFER && !creditForOther },
         // un credit envoye est toujours paye par MVola : on garde la place pour le numero et l'heure
         account.takeIf { !creditForOther },
         t.occurredAt.format(TIME),

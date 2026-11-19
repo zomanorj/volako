@@ -10,6 +10,8 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
+import mg.volako.core.data.PhoneContactsSource
+import mg.volako.core.domain.ContactSearch
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import mg.volako.VolakoApplication
@@ -38,12 +40,15 @@ data class HomeUiState(
     val gapCount: Int = 0,
     // date du dernier SMS "nouveau format" pas encore vu par l'utilisateur (null = pas d'alerte)
     val formatChangeAt: LocalDateTime? = null,
+    // numero -> nom du repertoire (affichage seulement : find() et update() gardent les vraies donnees)
+    val contactNames: Map<String, String> = emptyMap(),
 )
 
 class HomeViewModel(
     private val repository: TransactionRepository,
     private val importer: SmsImporter,
     private val preferences: UserPreferences,
+    contacts: PhoneContactsSource,
 ) : ViewModel() {
 
     val uiState: StateFlow<HomeUiState> = combine(
@@ -51,7 +56,8 @@ class HomeViewModel(
         repository.observePendingSms(),
         preferences.acknowledgedGaps,
         preferences.formatAlertSeenAt,
-    ) { transactions, pending, acknowledged, alertSeenAt ->
+        contacts.observeContacts(),
+    ) { transactions, pending, acknowledged, alertSeenAt, phoneContacts ->
         val change = FormatWatch.latestChange(transactions, pending, LocalDateTime.now())
         HomeUiState(
             formatChangeAt = change?.takeIf { it.toEpochMillis() > alertSeenAt },
@@ -61,6 +67,7 @@ class HomeViewModel(
             latest = transactions.take(5),
             pendingCount = pending.size,
             gapCount = Ledger.balanceGaps(transactions).count { it.key !in acknowledged },
+            contactNames = ContactSearch.namesByPhone(phoneContacts),
         )
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), HomeUiState())
 
@@ -123,7 +130,7 @@ class HomeViewModel(
         val Factory = viewModelFactory {
             initializer {
                 val c = (this[APPLICATION_KEY] as VolakoApplication).container
-                HomeViewModel(c.transactionRepository, c.smsImporter, c.preferences)
+                HomeViewModel(c.transactionRepository, c.smsImporter, c.preferences, c.phoneContacts)
             }
         }
     }

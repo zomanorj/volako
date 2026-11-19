@@ -81,4 +81,11 @@ class OperationsQueryTest {
         assertEquals(-(100 + 150 + 4_000L), groups[0].net)
         assertEquals(200_000L - 275, groups[1].net)
     }
+
+    @Test
+    fun `la recherche trouve aussi le nom du repertoire`() {
+        val names = mapOf("0345358300" to "Maman")
+        assertEquals(listOf(credit), OperationsQuery.apply(all, OperationFilter.ALL, "maman", names))
+        assertEquals(emptyList<Transaction>(), OperationsQuery.apply(all, OperationFilter.ALL, "maman"))
+    }
 }

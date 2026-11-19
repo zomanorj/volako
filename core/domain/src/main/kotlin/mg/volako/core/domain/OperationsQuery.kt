@@ -28,7 +28,8 @@ object OperationsQuery {
 
     // cherche dans le libelle, la personne, le numero et le montant (exact).
     // Sans accents ni majuscules ; pour les chiffres on ignore les espaces ("4 000" = "4000")
-    fun matchesSearch(t: Transaction, query: String): Boolean {
+    // names : numero -> nom du repertoire (on cherche aussi "Dada" si l'SMS dit "AndriamaharoElyse")
+    fun matchesSearch(t: Transaction, query: String, names: Map<String, String> = emptyMap()): Boolean {
         val q = normalize(query)
         if (q.isEmpty()) return true
         val digits = q.filter(Char::isDigit)
@@ -40,17 +41,17 @@ object OperationsQuery {
                 (t.fee > 0 && t.fee == value) ||
                 (digits.length >= 3 && t.counterpartyPhone?.contains(digits) == true)
         }
-        val haystack = listOfNotNull(t.label, t.counterpartyName, t.counterpartyPhone, categoryWord(t))
+        val haystack = listOfNotNull(t.label, t.counterpartyName, ContactSearch.nameFor(names, t.counterpartyPhone), t.counterpartyPhone, categoryWord(t))
             .joinToString(" ") { normalize(it) }
         return q.split(' ').filter { it.isNotEmpty() }.all { haystack.contains(it) }
     }
 
-    fun apply(all: List<Transaction>, filter: OperationFilter, query: String): List<Transaction> =
-        all.filter { matches(it, filter) && matchesSearch(it, query) }
+    fun apply(all: List<Transaction>, filter: OperationFilter, query: String, names: Map<String, String> = emptyMap()): List<Transaction> =
+        all.filter { matches(it, filter) && matchesSearch(it, query, names) }
 
     // nombre d'operations par filtre (avec la recherche en cours), pour les compteurs des pastilles
-    fun counts(all: List<Transaction>, query: String): Map<OperationFilter, Int> {
-        val searched = all.filter { matchesSearch(it, query) }
+    fun counts(all: List<Transaction>, query: String, names: Map<String, String> = emptyMap()): Map<OperationFilter, Int> {
+        val searched = all.filter { matchesSearch(it, query, names) }
         return OperationFilter.entries.associateWith { f -> searched.count { matches(it, f) } }
     }
 

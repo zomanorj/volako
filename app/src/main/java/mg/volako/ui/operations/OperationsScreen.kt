@@ -36,6 +36,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import mg.volako.R
+import mg.volako.core.domain.ContactSearch
 import mg.volako.core.designsystem.component.FilterChipItem
 import mg.volako.core.designsystem.component.FilterChipRow
 import mg.volako.core.designsystem.component.IconTile
@@ -105,6 +106,7 @@ fun OperationsScreen(
                 items(group.transactions, key = { it.id }) { t ->
                     SwipeableTransactionRow(
                         transaction = t,
+                        contactName = ContactSearch.nameFor(state.contactNames, t.counterpartyPhone),
                         onEdit = { onEdit(t.id) },
                         onDelete = { onDelete(t) },
                         modifier = Modifier.animateItem(),

@@ -28,6 +28,10 @@ object ContactSearch {
 
     fun isRealName(name: String?): Boolean = name != null && name.any { it.isLetter() }
 
+    // nom du repertoire pour un numero vu dans un SMS ("(034) 20 454 85", "+261...") ; null si inconnu
+    fun nameFor(names: Map<String, String>, phone: String?): String? =
+        RecentContacts.normalize(phone)?.let(names::get)
+
     fun search(
         query: String,
         recents: List<RecentContact>,
