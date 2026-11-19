@@ -35,6 +35,21 @@
                 android:resource="@xml/shortcuts" />
         </activity>
 
+        <!-- remplissage automatique de la bulle Yas (description, "reprendre la session").
+             BIND_ACCESSIBILITY_SERVICE : seul Android peut se connecter a ce service -->
+        <service
+            android:name=".ussd.UssdAutofillService"
+            android:exported="false"
+            android:label="@string/autofill_service_label"
+            android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE">
+            <intent-filter>
+                <action android:name="android.accessibilityservice.AccessibilityService" />
+            </intent-filter>
+            <meta-data
+                android:name="android.accessibilityservice"
+                android:resource="@xml/ussd_autofill_service" />
+        </service>
+
         <!-- BROADCAST_SMS : seul le systeme peut nous envoyer ce message (securite) -->
         <receiver
             android:name=".sms.MvolaSmsReceiver"

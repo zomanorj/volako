@@ -92,11 +92,19 @@ class MvolaUssdTest {
     }
 
     @Test
-    fun `description avec lettres refusee`() {
-        // sur le clavier "test" devient 8378, on refuse plutot que d'envoyer n'importe quoi
+    fun `description avec lettres tapee ensuite dans la bulle`() {
+        // jamais dans le code : sur le clavier "loyer" deviendrait 56937
+        val r = ready(UssdOperation.Send("0342045485", 100, payRecipientFee = false, description = "  loyer   novembre "))
+        assertEquals("#111*1*2*0342045485*100*2#", r.code)
+        assertEquals(NextOnPhone.DESCRIPTION, r.next)
+        assertEquals("loyer novembre", r.fillDescription)
+    }
+
+    @Test
+    fun `description trop longue refusee`() {
         assertEquals(
-            UssdError.DESCRIPTION_NOT_DIGITS,
-            error(UssdOperation.Send("0342045485", 100, payRecipientFee = false, description = "test")),
+            UssdError.DESCRIPTION_TOO_LONG,
+            error(UssdOperation.Send("0342045485", 100, false, "a".repeat(MvolaUssd.MAX_DESCRIPTION + 1))),
         )
     }
 

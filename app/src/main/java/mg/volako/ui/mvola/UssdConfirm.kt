@@ -72,7 +72,10 @@ fun UssdConfirm(
         if (launchEnabled) {
             when (request.next) {
                 NextOnPhone.SECRET_CODE -> SecretNote(stringResource(R.string.ussd_next_secret))
-                NextOnPhone.DESCRIPTION -> SecretNote(stringResource(R.string.ussd_next_description))
+                NextOnPhone.DESCRIPTION -> SecretNote(
+                    request.fillDescription?.let { stringResource(R.string.ussd_next_fill, it) }
+                        ?: stringResource(R.string.ussd_next_description),
+                )
                 // #322 : pas de code secret pour se rattraper, on previent clairement
                 NextOnPhone.INSTANT -> AlertBanner(
                     icon = DesignR.drawable.ic_report,
@@ -141,7 +144,6 @@ fun ussdErrorText(error: UssdError): String = when (error) {
     UssdError.INVALID_MOBILE_NUMBER -> stringResource(R.string.ussd_error_mobile_number)
     UssdError.AMOUNT_TOO_SMALL -> stringResource(R.string.ussd_error_small, formatAriary(MvolaUssd.MIN_AMOUNT))
     UssdError.AMOUNT_TOO_BIG -> stringResource(R.string.ussd_error_big, formatAriary(MvolaUssd.MAX_AMOUNT))
-    UssdError.DESCRIPTION_NOT_DIGITS -> stringResource(R.string.ussd_error_desc_digits)
     UssdError.DESCRIPTION_TOO_LONG -> stringResource(R.string.ussd_error_desc_long)
     UssdError.NO_AIRTIME_CODE -> stringResource(R.string.ussd_error_no_airtime)
 }

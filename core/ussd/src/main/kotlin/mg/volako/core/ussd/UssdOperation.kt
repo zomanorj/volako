@@ -19,7 +19,7 @@ sealed interface UssdOperation {
     // Offre payee avec le credit telephonique (#322*..#) : achat IMMEDIAT, sans code secret
     data class OfferWithAirtime(val offer: YasOffer) : UssdOperation
 
-    // description = null : Yas demandera la description, l'utilisateur la tape avec des lettres
+    // description : chiffres = mise dans le code ; avec des lettres = tapee ensuite dans la bulle Yas
     data class Send(
         val number: String,
         val amount: Long,
@@ -41,8 +41,10 @@ enum class NextOnPhone {
     INSTANT,     // achat fait tout de suite, sans code secret (offre payee avec le credit)
 }
 
-// Un code pret a etre compose
-data class UssdRequest(val code: String, val next: NextOnPhone) {
+// Un code pret a etre compose.
+// fillDescription : description avec des lettres, a taper dans la bulle Yas quand elle la demande
+// (un code compose ne garde que les chiffres : "test" deviendrait 8378)
+data class UssdRequest(val code: String, val next: NextOnPhone, val fillDescription: String? = null) {
 
     // Pour Intent ACTION_CALL / ACTION_DIAL : le # doit etre encode en %23
     val telUri: String get() = "tel:" + code.replace("#", "%23")
@@ -54,7 +56,6 @@ enum class UssdError {
     INVALID_MOBILE_NUMBER,   // pas un numero mobile malgache (envoi : Yas, Orange, Airtel)
     AMOUNT_TOO_SMALL,
     AMOUNT_TOO_BIG,
-    DESCRIPTION_NOT_DIGITS,  // les lettres deviennent des chiffres sur le clavier (test -> 8378)
     DESCRIPTION_TOO_LONG,
     NO_AIRTIME_CODE,         // on ne connait pas de code #322 pour cette offre
 }

@@ -2,6 +2,8 @@ package mg.volako.ui.mvola
 
 import android.Manifest
 import android.content.ActivityNotFoundException
+import android.content.ClipData
+import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -18,6 +20,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.core.content.ContextCompat
 import mg.volako.R
 import mg.volako.core.ussd.UssdRequest
+import mg.volako.ussd.UssdAutofill
+import mg.volako.ussd.UssdAutofillService
 
 // Compose un code USSD.
 // Avec la permission "Appels" : la fenetre Yas s'ouvre directement (ACTION_CALL).
@@ -32,6 +36,7 @@ fun rememberUssdLauncher(): (UssdRequest) -> Unit {
         pendingCode = null
     }
     return { request ->
+        prepareAutofill(context, request)
         if (hasCallPermission(context)) {
             dial(context, request.code, direct = true)
         } else {
@@ -39,6 +44,18 @@ fun rememberUssdLauncher(): (UssdRequest) -> Unit {
             permission.launch(Manifest.permission.CALL_PHONE)
         }
     }
+}
+
+// service active : il tapera la description (et repondra "2" a "reprendre la session ?").
+// sinon : la description avec des lettres est copiee pour etre collee dans la bulle.
+private fun prepareAutofill(context: Context, request: UssdRequest) {
+    if (UssdAutofillService.isEnabled(context)) {
+        UssdAutofill.arm(request.fillDescription)
+        return
+    }
+    val text = request.fillDescription ?: return
+    context.getSystemService(ClipboardManager::class.java)?.setPrimaryClip(ClipData.newPlainText("description", text))
+    Toast.makeText(context, R.string.autofill_copied, Toast.LENGTH_LONG).show()
 }
 
 private fun hasCallPermission(context: Context) =

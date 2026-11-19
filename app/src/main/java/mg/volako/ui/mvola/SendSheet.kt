@@ -17,8 +17,10 @@ import androidx.compose.material3.SegmentedButton
 import androidx.compose.material3.SegmentedButtonDefaults
 import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -26,7 +28,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
-import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.KeyboardCapitalization
 import mg.volako.R
 import mg.volako.core.designsystem.component.formatAriary
 import mg.volako.core.designsystem.theme.Spacing
@@ -131,7 +133,7 @@ fun SendSheet(
     }
 }
 
-// frais de retrait du destinataire + description (chiffres seulement, sinon Yas les transforme)
+// frais de retrait du destinataire (seulement vers Yas) + description (lettres acceptees)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun SendOptions(
@@ -156,17 +158,33 @@ private fun SendOptions(
                 }
             }
         }
+        val autofillOn = rememberAutofillEnabled()
+        var showAutofillDialog by remember { mutableStateOf(false) }
+        // des lettres : elles ne peuvent pas aller dans le code, Volako les tapera dans la bulle
+        val hasLetters = description.any { !it.isDigit() && !it.isWhitespace() }
         OutlinedTextField(
             value = description,
-            // on garde tout ce qui est tape pour montrer l'erreur si ce ne sont pas des chiffres
+            // un peu plus que la limite : on montre l'erreur au lieu de couper en silence
             onValueChange = { onDescription(it.take(MvolaUssd.MAX_DESCRIPTION + 5)) },
             label = { Text(stringResource(R.string.ussd_description_label)) },
             singleLine = true,
             isError = error != null,
-            supportingText = { Text(error ?: stringResource(R.string.ussd_description_hint)) },
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number, imeAction = ImeAction.Done),
+            supportingText = {
+                Text(
+                    error ?: when {
+                        !hasLetters -> stringResource(R.string.ussd_description_hint)
+                        autofillOn -> stringResource(R.string.ussd_description_auto)
+                        else -> stringResource(R.string.ussd_description_copy)
+                    },
+                )
+            },
+            keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences, imeAction = ImeAction.Done),
             modifier = Modifier.fillMaxWidth(),
         )
+        if (hasLetters && !autofillOn) {
+            TextButton(onClick = { showAutofillDialog = true }) { Text(stringResource(R.string.ussd_activate)) }
+        }
+        if (showAutofillDialog) AutofillDialog(onDismiss = { showAutofillDialog = false })
         // vu par l'utilisateur : numero inconnu ou sans compte -> Yas propose un "coupon"
         Text(
             stringResource(R.string.ussd_coupon_hint),

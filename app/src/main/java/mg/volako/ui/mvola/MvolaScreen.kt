@@ -63,6 +63,8 @@ fun MvolaScreen(
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val launch = rememberUssdLauncher()
+    val autofillOn = rememberAutofillEnabled()
+    var showAutofillDialog by rememberSaveable { mutableStateOf(false) }
     var sheet by rememberSaveable { mutableStateOf<MvolaSheet?>(null) }
     var openFavoriteId by rememberSaveable { mutableStateOf<Long?>(null) }
 
@@ -159,6 +161,16 @@ fun MvolaScreen(
             onClick = { (MvolaUssd.build(UssdOperation.CreditBalance) as? UssdResult.Ready)?.let { launch(it.request) } },
         )
 
+        // un reglage, pas une consultation : sa propre section
+        SectionHeader(stringResource(R.string.mvola_section_settings))
+        // bien visible : on voit tout de suite si le remplissage auto est actif
+        ActionRow(
+            icon = if (autofillOn) DesignR.drawable.ic_task_alt else DesignR.drawable.ic_autorenew,
+            title = stringResource(R.string.autofill_row_title),
+            subtitle = stringResource(if (autofillOn) R.string.autofill_row_on else R.string.autofill_row_off),
+            onClick = { showAutofillDialog = true },
+        )
+
         Spacer(Modifier.height(Spacing.sm))
         SecretNote(stringResource(R.string.mvola_secret_note))
     }
@@ -170,6 +182,8 @@ fun MvolaScreen(
         MvolaSheet.OFFER -> OfferSheet(mvolaBalance, picker(state.creditTargets), launchAndClose, viewModel::addFavorite, onDismiss = { sheet = null })
         null -> Unit
     }
+
+    if (showAutofillDialog) AutofillDialog(onDismiss = { showAutofillDialog = false })
 
     // on retrouve le favori par son id (il peut avoir ete supprime entre temps)
     state.favorites.firstOrNull { it.id == openFavoriteId }?.let { fav ->

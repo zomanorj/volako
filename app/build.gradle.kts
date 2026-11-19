@@ -12,8 +12,8 @@ android {
         applicationId = "mg.volako"
         minSdk = libs.versions.minSdk.get().toInt()
         targetSdk = libs.versions.targetSdk.get().toInt()
-        versionCode = 26
-        versionName = "1.14.0"
+        versionCode = 27
+        versionName = "1.15.0"
     }
 
     buildTypes {

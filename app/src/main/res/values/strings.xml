@@ -190,6 +190,7 @@
     <string name="mvola_balance">Solde MVola d\'après tes SMS : %1$s</string>
     <string name="mvola_section_buy">Acheter</string>
     <string name="mvola_section_check">Consulter</string>
+    <string name="mvola_section_settings">Réglages</string>
     <string name="mvola_credit">Crédit</string>
     <string name="mvola_credit_sub">Pour moi ou un autre</string>
     <string name="mvola_offer">Offre</string>
@@ -221,12 +222,11 @@
     <string name="ussd_error_number">Ce n\'est pas un numéro Yas (034 ou 038, 10 chiffres)</string>
     <string name="ussd_error_small">Minimum %1$s</string>
     <string name="ussd_error_big">Maximum %1$s</string>
-    <string name="ussd_error_desc_digits">Description en chiffres seulement</string>
     <string name="ussd_error_desc_long">Description trop longue</string>
     <string name="ussd_error_no_airtime">Pas de code connu pour payer cette offre avec le crédit</string>
     <string name="ussd_no_phone">Impossible d\'ouvrir le téléphone sur cet appareil</string>
     <string name="mvola_send">Envoyer de l\'argent</string>
-    <string name="mvola_send_sub">Vers un numéro Yas</string>
+    <string name="mvola_send_sub">Yas, Orange, Airtel</string>
     <string name="ussd_send_title">Envoyer de l\'argent</string>
     <string name="ussd_credit_other_title">Crédit pour un autre numéro</string>
     <string name="ussd_for_me">Pour moi</string>
@@ -243,7 +243,7 @@
     <string name="ussd_no">Non</string>
     <string name="ussd_yes">Oui</string>
     <string name="ussd_description_label">Description (facultatif)</string>
-    <string name="ussd_description_hint">Chiffres seulement. Vide : tu l\'écriras dans la fenêtre Yas.</string>
+    <string name="ussd_description_hint">Vide : Yas te la demandera.</string>
     <string name="ussd_next_description">La fenêtre Yas va te demander la description, puis ton code secret. Vérifie le nom et le montant affichés par Yas avant de le taper.</string>
     <string name="mvola_section_money">Argent</string>
     <string name="mvola_send_short">Envoyer</string>
@@ -309,4 +309,19 @@
     <string name="ussd_number_other_operator">Numéro %1$s, pas dans tes contacts</string>
     <string name="ussd_row_network">Réseau</string>
     <string name="ussd_coupon_hint">Si Yas propose de créer un coupon, ce numéro n\'a pas de compte MVola : annule et vérifie le numéro.</string>
+    <!-- Remplissage automatique (service d'accessibilite) -->
+    <string name="autofill_service_label">Volako : remplissage MVola</string>
+    <string name="autofill_service_description">Tape pour toi la description d\'un envoi MVola dans la fenêtre Yas, et répond « Non » quand Yas propose de reprendre une ancienne session. Volako agit seulement dans la fenêtre Yas, pendant 90 secondes après ton appui sur Lancer. Il ne lit jamais ton code secret et ne le tape jamais.</string>
+    <string name="autofill_row_title">Remplissage automatique</string>
+    <string name="autofill_row_on">Activé · Volako tape la description pour toi</string>
+    <string name="autofill_row_off">Désactivé · touche pour l\'activer</string>
+    <string name="autofill_dialog_title">Remplissage automatique</string>
+    <string name="autofill_dialog_body">Pour que Volako tape la description dans la fenêtre Yas à ta place, active « Volako : remplissage MVola » dans Réglages &gt; Accessibilité.\n\nVolako agit seulement dans la fenêtre Yas, pendant 90 secondes après ton appui sur Lancer. Il ne lit jamais ton code secret et ne le tape jamais.</string>
+    <string name="autofill_dialog_open">Ouvrir les réglages</string>
+    <string name="autofill_dialog_later">Plus tard</string>
+    <string name="autofill_copied">Description copiée : colle-la dans la fenêtre Yas</string>
+    <string name="ussd_description_auto">Volako la tapera pour toi dans la fenêtre Yas.</string>
+    <string name="ussd_description_copy">Elle sera copiée : tu la colleras dans la fenêtre Yas. Active le remplissage automatique pour gagner du temps.</string>
+    <string name="ussd_activate">Activer</string>
+    <string name="ussd_next_fill">Quand Yas demandera la description, Volako tapera « %1$s ». Ensuite tape ton code secret, après avoir vérifié le nom et le montant.</string>
 </resources>
