@@ -41,6 +41,7 @@ import mg.volako.core.designsystem.component.SectionHeader
 import mg.volako.core.designsystem.component.formatAriary
 import mg.volako.core.designsystem.theme.Sizes
 import mg.volako.core.designsystem.theme.Spacing
+import mg.volako.core.domain.RecentContact
 import mg.volako.core.ussd.MvolaUssd
 import mg.volako.core.ussd.UssdOperation
 import mg.volako.core.ussd.UssdRequest
@@ -75,6 +76,11 @@ fun MvolaScreen(
             null -> return@LaunchedEffect
         }
         onEntryHandled()
+    }
+
+    // recents propres a chaque operation + tout le repertoire du telephone
+    val picker = { recents: List<RecentContact> ->
+        PeoplePicker(recents, state.contacts, state.contactsAllowed, onContactsAllowed = viewModel::onContactsPermissionChanged)
     }
 
     val launchAndClose = { request: UssdRequest ->
@@ -158,10 +164,10 @@ fun MvolaScreen(
     }
 
     when (sheet) {
-        MvolaSheet.SEND -> SendSheet(mvolaBalance, state.people, launchAndClose, viewModel::addFavorite, onDismiss = { sheet = null })
-        MvolaSheet.WITHDRAW -> WithdrawSheet(mvolaBalance, state.agents, launchAndClose, viewModel::addFavorite, onDismiss = { sheet = null })
-        MvolaSheet.CREDIT -> CreditSheet(mvolaBalance, state.creditTargets, launchAndClose, viewModel::addFavorite, onDismiss = { sheet = null })
-        MvolaSheet.OFFER -> OfferSheet(mvolaBalance, state.creditTargets, launchAndClose, viewModel::addFavorite, onDismiss = { sheet = null })
+        MvolaSheet.SEND -> SendSheet(mvolaBalance, picker(state.people), launchAndClose, viewModel::addFavorite, onDismiss = { sheet = null })
+        MvolaSheet.WITHDRAW -> WithdrawSheet(mvolaBalance, picker(state.agents), launchAndClose, viewModel::addFavorite, onDismiss = { sheet = null })
+        MvolaSheet.CREDIT -> CreditSheet(mvolaBalance, picker(state.creditTargets), launchAndClose, viewModel::addFavorite, onDismiss = { sheet = null })
+        MvolaSheet.OFFER -> OfferSheet(mvolaBalance, picker(state.creditTargets), launchAndClose, viewModel::addFavorite, onDismiss = { sheet = null })
         null -> Unit
     }
 

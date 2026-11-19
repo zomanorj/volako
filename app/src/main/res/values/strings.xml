@@ -288,4 +288,14 @@
     <string name="ussd_instant_title">Achat immédiat, sans code secret</string>
     <string name="ussd_instant_body">Le code #322 achète l\'offre dès que tu touches Lancer, avec ton crédit téléphone. Vérifie bien l\'offre.</string>
     <string name="ussd_resume_hint">Si Yas demande de reprendre la session précédente, réponds 2 (Non).</string>
+    <!-- Choisir un numero : recherche + contacts du telephone -->
+    <string name="ussd_search_people">Nom ou numéro</string>
+    <string name="ussd_clear">Effacer la recherche</string>
+    <string name="ussd_use_number">Utiliser ce numéro</string>
+    <string name="ussd_suggestions">Suggestions</string>
+    <string name="ussd_contacts">Contacts</string>
+    <string name="ussd_no_match">Aucun contact Yas ne correspond. Tu peux aussi taper le numéro.</string>
+    <string name="ussd_contacts_title">Retrouve tes contacts ici</string>
+    <string name="ussd_contacts_body">Volako affiche les noms de ton répertoire et te laisse les chercher. Il les lit seulement, rien ne quitte ton téléphone.</string>
+    <string name="ussd_contacts_allow">Autoriser</string>
 </resources>

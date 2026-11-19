@@ -25,7 +25,6 @@ import androidx.compose.ui.res.stringResource
 import mg.volako.R
 import mg.volako.core.designsystem.component.formatAriary
 import mg.volako.core.designsystem.theme.Spacing
-import mg.volako.core.domain.RecentContact
 import mg.volako.core.model.Favorite
 import mg.volako.core.ussd.MvolaUssd
 import mg.volako.core.ussd.UssdOperation
@@ -38,7 +37,7 @@ import mg.volako.core.ussd.YasNumber
 @Composable
 fun WithdrawSheet(
     mvolaBalance: Long,
-    agents: List<RecentContact>,
+    people: PeoplePicker,
     onLaunch: (UssdRequest) -> Unit,
     onSaveFavorite: (Favorite) -> Unit,
     onDismiss: () -> Unit,
@@ -97,13 +96,12 @@ fun WithdrawSheet(
 
                 agent == null -> RecipientStep(
                     title = stringResource(R.string.ussd_withdraw_title),
-                    recents = agents,
+                    people = people,
                     onChosen = {
                         agentNumber = it.number.digits
                         agentName = it.name
                     },
                     header = where,
-                    numberLabel = stringResource(R.string.ussd_agent_number),
                 )
 
                 else -> AmountStep(

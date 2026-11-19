@@ -7,6 +7,8 @@
     <uses-permission android:name="android.permission.RECEIVE_SMS" />
     <!-- petite notification "-500 Ar Credit" (Android 13+) -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <!-- onglet MVola : afficher les contacts du telephone (memes noms, recherche). Lecture seule -->
+    <uses-permission android:name="android.permission.READ_CONTACTS" />
     <!-- onglet MVola : composer le code USSD en un appui (sinon on ouvre juste le clavier du telephone) -->
     <uses-permission android:name="android.permission.CALL_PHONE" />
     <!-- pas obligatoire : sans SMS on peut quand meme noter les especes -->

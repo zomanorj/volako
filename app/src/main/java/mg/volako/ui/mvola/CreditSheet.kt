@@ -24,7 +24,6 @@ import androidx.compose.ui.res.stringResource
 import mg.volako.R
 import mg.volako.core.designsystem.component.formatAriary
 import mg.volako.core.designsystem.theme.Spacing
-import mg.volako.core.domain.RecentContact
 import mg.volako.core.model.Favorite
 import mg.volako.core.ussd.MvolaUssd
 import mg.volako.core.ussd.UssdOperation
@@ -37,7 +36,7 @@ import mg.volako.core.ussd.YasNumber
 @Composable
 fun CreditSheet(
     mvolaBalance: Long,
-    recents: List<RecentContact>,
+    people: PeoplePicker,
     onLaunch: (UssdRequest) -> Unit,
     onSaveFavorite: (Favorite) -> Unit,
     onDismiss: () -> Unit,
@@ -84,7 +83,7 @@ fun CreditSheet(
 
                 forOther && recipient == null -> RecipientStep(
                     title = stringResource(R.string.ussd_credit_other_title),
-                    recents = recents,
+                    people = people,
                     onChosen = {
                         otherNumber = it.number.digits
                         otherName = it.name

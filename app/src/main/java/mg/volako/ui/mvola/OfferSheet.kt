@@ -35,7 +35,6 @@ import mg.volako.core.designsystem.component.formatAriary
 import mg.volako.core.designsystem.theme.AmountTextStyle
 import mg.volako.core.designsystem.theme.Sizes
 import mg.volako.core.designsystem.theme.Spacing
-import mg.volako.core.domain.RecentContact
 import mg.volako.core.model.Favorite
 import mg.volako.core.ussd.MvolaUssd
 import mg.volako.core.ussd.OfferFamily
@@ -53,7 +52,7 @@ import mg.volako.core.designsystem.R as DesignR
 @Composable
 fun OfferSheet(
     mvolaBalance: Long,
-    recents: List<RecentContact>,
+    people: PeoplePicker,
     onLaunch: (UssdRequest) -> Unit,
     onSaveFavorite: (Favorite) -> Unit,
     onDismiss: () -> Unit,
@@ -143,7 +142,7 @@ fun OfferSheet(
                 forOther && recipient == null -> Column(Modifier.padding(horizontal = Spacing.lg)) {
                     RecipientStep(
                         title = stringResource(R.string.ussd_offer_other_title),
-                        recents = recents,
+                        people = people,
                         onChosen = {
                             otherNumber = it.number.digits
                             otherName = it.name
