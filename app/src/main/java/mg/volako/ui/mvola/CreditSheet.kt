@@ -2,17 +2,16 @@ package mg.volako.ui.mvola
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Button
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.SuggestionChip
+import androidx.compose.material3.SegmentedButton
+import androidx.compose.material3.SegmentedButtonDefaults
+import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
@@ -22,32 +21,37 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.dp
 import mg.volako.R
-import mg.volako.core.designsystem.component.AlertBanner
-import mg.volako.core.designsystem.component.NumericKeypad
 import mg.volako.core.designsystem.component.formatAriary
-import mg.volako.core.designsystem.theme.AmountTextStyle
 import mg.volako.core.designsystem.theme.Spacing
+import mg.volako.core.domain.RecentContact
 import mg.volako.core.ussd.MvolaUssd
 import mg.volako.core.ussd.UssdOperation
 import mg.volako.core.ussd.UssdRequest
 import mg.volako.core.ussd.UssdResult
-import mg.volako.core.designsystem.R as DesignR
+import mg.volako.core.ussd.YasNumber
 
-// Credit pour mon numero : montant au pave -> resume -> Lancer
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
+// Credit : pour moi, ou pour un autre numero (destinataire -> montant -> resume -> Lancer)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CreditSheet(
     mvolaBalance: Long,
+    recents: List<RecentContact>,
     onLaunch: (UssdRequest) -> Unit,
     onDismiss: () -> Unit,
 ) {
+    var forOther by rememberSaveable { mutableStateOf(false) }
+    // destinataire garde en texte simple (sauvegarde facile si Android recree l'ecran)
+    var otherNumber by rememberSaveable { mutableStateOf<String?>(null) }
+    var otherName by rememberSaveable { mutableStateOf<String?>(null) }
     var digits by rememberSaveable { mutableStateOf("") }
     var confirming by rememberSaveable { mutableStateOf(false) }
+
     val amount = digits.toLongOrNull() ?: 0L
-    val result = MvolaUssd.build(UssdOperation.CreditForMe(amount))
+    val recipient = otherNumber?.let(YasNumber::parse)?.let { Recipient(it, otherName) }
+    val result = MvolaUssd.build(
+        if (forOther) UssdOperation.CreditForOther(recipient?.number?.digits.orEmpty(), amount) else UssdOperation.CreditForMe(amount),
+    )
 
     ModalBottomSheet(
         onDismissRequest = onDismiss,
@@ -57,72 +61,72 @@ fun CreditSheet(
             Modifier
                 .padding(horizontal = Spacing.lg)
                 .navigationBarsPadding()
-                .padding(bottom = Spacing.lg),
+                .padding(bottom = Spacing.lg)
+                .verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.spacedBy(Spacing.lg),
         ) {
-            if (confirming && result is UssdResult.Ready) {
-                UssdConfirm(
-                    rows = listOf(
-                        stringResource(R.string.ussd_row_operation) to stringResource(R.string.ussd_op_credit_me),
-                        stringResource(R.string.ussd_row_amount) to formatAriary(amount),
-                        stringResource(R.string.ussd_row_paid_with) to stringResource(R.string.mvola_title),
-                        stringResource(R.string.ussd_row_fee) to stringResource(R.string.ussd_fee_none),
-                    ),
+            when {
+                confirming && result is UssdResult.Ready -> UssdConfirm(
+                    rows = buildList {
+                        add(stringResource(R.string.ussd_row_operation) to stringResource(if (forOther) R.string.ussd_op_credit_other else R.string.ussd_op_credit_me))
+                        if (recipient != null && forOther) add(stringResource(R.string.ussd_row_to) to recipient.label())
+                        add(stringResource(R.string.ussd_row_amount) to formatAriary(amount))
+                        add(stringResource(R.string.ussd_row_paid_with) to stringResource(R.string.mvola_title))
+                        add(stringResource(R.string.ussd_row_fee) to if (forOther) formatAriary(OTHER_NUMBER_FEE) else stringResource(R.string.ussd_fee_none))
+                    },
                     request = result.request,
                     onLaunch = { onLaunch(result.request) },
                     onEdit = { confirming = false },
                 )
-                return@Column
-            }
 
-            Text(stringResource(R.string.ussd_credit_title), style = MaterialTheme.typography.titleLarge)
-            Text(
-                formatAriary(amount),
-                style = AmountTextStyle.Hero,
-                color = if (amount > 0) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant,
-                textAlign = TextAlign.Center,
-                modifier = Modifier.fillMaxWidth(),
-            )
-            // erreur seulement quand il y a deja un montant (pas des le debut)
-            val error = (result as? UssdResult.Refused)?.error?.takeIf { amount > 0 }
-            if (error != null) {
-                Text(
-                    ussdErrorText(error),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.error,
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier.fillMaxWidth(),
+                forOther && recipient == null -> RecipientStep(
+                    title = stringResource(R.string.ussd_credit_other_title),
+                    recents = recents,
+                    onChosen = {
+                        otherNumber = it.number.digits
+                        otherName = it.name
+                    },
+                    header = { ForWhom(forOther, onChange = { forOther = it }) },
+                )
+
+                else -> AmountStep(
+                    title = stringResource(if (forOther) R.string.ussd_credit_other_title else R.string.ussd_credit_title),
+                    digits = digits,
+                    onDigitsChange = { digits = it },
+                    error = (result as? UssdResult.Refused)?.error,
+                    // pour un autre numero, Yas ajoute 150 Ar de frais
+                    mvolaBalance = if (forOther) mvolaBalance - OTHER_NUMBER_FEE else mvolaBalance,
+                    quickAmounts = QUICK_AMOUNTS,
+                    onContinue = { confirming = true },
+                    header = {
+                        ForWhom(forOther, onChange = { forOther = it })
+                        if (forOther && recipient != null) {
+                            RecipientChip(recipient, onClick = { otherNumber = null })
+                        }
+                    },
                 )
             }
-            if (amount > mvolaBalance && result is UssdResult.Ready) {
-                AlertBanner(
-                    icon = DesignR.drawable.ic_report,
-                    title = stringResource(R.string.ussd_low_balance, formatAriary(mvolaBalance)),
-                    body = stringResource(R.string.ussd_low_balance_body),
-                )
-            }
-
-            FlowRow(horizontalArrangement = Arrangement.spacedBy(Spacing.sm)) {
-                QUICK_AMOUNTS.forEach { quick ->
-                    SuggestionChip(onClick = { digits = quick.toString() }, label = { Text(formatAriary(quick)) })
-                }
-            }
-
-            NumericKeypad(
-                onDigits = { if ((digits + it).trimStart('0').length <= MAX_DIGITS) digits = (digits + it).trimStart('0') },
-                onBackspace = { digits = digits.dropLast(1) },
-                backspaceDescription = stringResource(R.string.entry_backspace),
-            )
-            Button(
-                onClick = { confirming = true },
-                enabled = result is UssdResult.Ready,
-                modifier = Modifier.fillMaxWidth().height(56.dp),
-            ) { Text(stringResource(R.string.ussd_continue)) }
         }
     }
 }
 
-// les montants les plus courants pour le credit
-private val QUICK_AMOUNTS = listOf(500L, 1_000L, 2_000L, 5_000L)
+// "Pour moi / Pour un autre"
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun ForWhom(forOther: Boolean, onChange: (Boolean) -> Unit) {
+    val options = listOf(false to R.string.ussd_for_me, true to R.string.ussd_for_other)
+    SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth()) {
+        options.forEachIndexed { index, (value, label) ->
+            SegmentedButton(
+                selected = forOther == value,
+                onClick = { onChange(value) },
+                shape = SegmentedButtonDefaults.itemShape(index, options.size),
+            ) { Text(stringResource(label)) }
+        }
+    }
+}
 
-private const val MAX_DIGITS = 8
+// frais Yas pour un achat vers un autre numero (mvola.mg, quel que soit le montant)
+private const val OTHER_NUMBER_FEE = 150L
+
+private val QUICK_AMOUNTS = listOf(500L, 1_000L, 2_000L, 5_000L)

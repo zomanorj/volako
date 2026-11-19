@@ -38,6 +38,9 @@ fun UssdConfirm(
     request: UssdRequest,
     onLaunch: () -> Unit,
     onEdit: () -> Unit,
+    launchEnabled: Boolean = true,
+    // reglages modifiables juste avant de lancer (ex : frais de retrait, description)
+    options: @Composable () -> Unit = {},
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(Spacing.lg)) {
         Text(stringResource(R.string.ussd_confirm_title), style = MaterialTheme.typography.titleLarge)
@@ -51,9 +54,15 @@ fun UssdConfirm(
             }
         }
 
-        if (request.next == NextOnPhone.SECRET_CODE) SecretNote(stringResource(R.string.ussd_next_secret))
+        options()
 
-        Button(onClick = onLaunch, modifier = Modifier.fillMaxWidth().height(56.dp)) {
+        when (request.next) {
+            NextOnPhone.SECRET_CODE -> SecretNote(stringResource(R.string.ussd_next_secret))
+            NextOnPhone.DESCRIPTION -> SecretNote(stringResource(R.string.ussd_next_description))
+            NextOnPhone.MENU, NextOnPhone.RESULT -> Unit
+        }
+
+        Button(onClick = onLaunch, enabled = launchEnabled, modifier = Modifier.fillMaxWidth().height(56.dp)) {
             Icon(painterResource(DesignR.drawable.ic_dialpad), null, Modifier.size(20.dp))
             Text(stringResource(R.string.ussd_launch), Modifier.padding(start = Spacing.sm))
         }

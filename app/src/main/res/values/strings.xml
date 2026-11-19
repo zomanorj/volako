@@ -191,7 +191,7 @@
     <string name="mvola_section_buy">Acheter</string>
     <string name="mvola_section_check">Consulter</string>
     <string name="mvola_credit">Crédit</string>
-    <string name="mvola_credit_sub">Pour mon numéro</string>
+    <string name="mvola_credit_sub">Pour moi ou un autre</string>
     <string name="mvola_offer">Offre</string>
     <string name="mvola_offer_sub">M\'Ora, First, Ye\'low, Net</string>
     <string name="mvola_credit_balance">Solde crédit</string>
@@ -224,4 +224,24 @@
     <string name="ussd_error_desc_digits">Description en chiffres seulement</string>
     <string name="ussd_error_desc_long">Description trop longue</string>
     <string name="ussd_no_phone">Impossible d\'ouvrir le téléphone sur cet appareil</string>
+    <string name="mvola_send">Envoyer de l\'argent</string>
+    <string name="mvola_send_sub">Vers un numéro Yas</string>
+    <string name="ussd_send_title">Envoyer de l\'argent</string>
+    <string name="ussd_credit_other_title">Crédit pour un autre numéro</string>
+    <string name="ussd_for_me">Pour moi</string>
+    <string name="ussd_for_other">Pour un autre</string>
+    <string name="ussd_number_label">Numéro Yas</string>
+    <string name="ussd_pick_contact">Choisir dans le répertoire</string>
+    <string name="ussd_recents">Récents</string>
+    <string name="ussd_change">Changer</string>
+    <string name="ussd_row_to">Pour</string>
+    <string name="ussd_op_credit_other">Crédit pour un autre numéro</string>
+    <string name="ussd_op_send">Envoi d\'argent</string>
+    <string name="ussd_fee_shown_by_yas">Affichés par Yas</string>
+    <string name="ussd_pay_fee_question">Je paie ses frais de retrait ?</string>
+    <string name="ussd_no">Non</string>
+    <string name="ussd_yes">Oui</string>
+    <string name="ussd_description_label">Description (facultatif)</string>
+    <string name="ussd_description_hint">Chiffres seulement. Vide : tu l\'écriras dans la fenêtre Yas.</string>
+    <string name="ussd_next_description">La fenêtre Yas va te demander la description, puis ton code secret. Vérifie le nom et le montant affichés par Yas avant de le taper.</string>
 </resources>

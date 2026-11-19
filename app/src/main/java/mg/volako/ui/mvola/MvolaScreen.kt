@@ -31,6 +31,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
 import mg.volako.R
 import mg.volako.core.designsystem.component.IconTile
 import mg.volako.core.designsystem.component.SectionHeader
@@ -44,12 +46,17 @@ import mg.volako.core.ussd.UssdResult
 import mg.volako.core.designsystem.R as DesignR
 
 // les fenetres qu'on peut ouvrir depuis l'onglet
-private enum class MvolaSheet { CREDIT, OFFER }
+private enum class MvolaSheet { SEND, CREDIT, OFFER }
 
 // Onglet MVola : les operations courantes en un appui, sans taper les longs codes #111*...
 // L'app prepare le code, l'utilisateur relit, puis tape son code secret dans la fenetre Yas.
 @Composable
-fun MvolaScreen(contentPadding: PaddingValues, mvolaBalance: Long) {
+fun MvolaScreen(
+    contentPadding: PaddingValues,
+    mvolaBalance: Long,
+    viewModel: MvolaViewModel = viewModel(factory = MvolaViewModel.Factory),
+) {
+    val state by viewModel.uiState.collectAsStateWithLifecycle()
     val launch = rememberUssdLauncher()
     var sheet by rememberSaveable { mutableStateOf<MvolaSheet?>(null) }
 
@@ -75,6 +82,14 @@ fun MvolaScreen(contentPadding: PaddingValues, mvolaBalance: Long) {
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
+
+        // l'action la plus utilisee : en grand, sur toute la largeur
+        WideActionTile(
+            icon = DesignR.drawable.ic_send_money,
+            title = stringResource(R.string.mvola_send),
+            subtitle = stringResource(R.string.mvola_send_sub),
+            onClick = { sheet = MvolaSheet.SEND },
+        )
 
         SectionHeader(stringResource(R.string.mvola_section_buy))
         // IntrinsicSize.Max + fillMaxHeight : les deux tuiles ont toujours la meme hauteur
@@ -109,7 +124,8 @@ fun MvolaScreen(contentPadding: PaddingValues, mvolaBalance: Long) {
     }
 
     when (sheet) {
-        MvolaSheet.CREDIT -> CreditSheet(mvolaBalance, onLaunch = launchAndClose, onDismiss = { sheet = null })
+        MvolaSheet.SEND -> SendSheet(mvolaBalance, state.people, onLaunch = launchAndClose, onDismiss = { sheet = null })
+        MvolaSheet.CREDIT -> CreditSheet(mvolaBalance, state.creditTargets, onLaunch = launchAndClose, onDismiss = { sheet = null })
         MvolaSheet.OFFER -> OfferSheet(mvolaBalance, onLaunch = launchAndClose, onDismiss = { sheet = null })
         null -> Unit
     }
@@ -141,6 +157,45 @@ private fun ActionTile(
                     maxLines = 2,
                 )
             }
+        }
+    }
+}
+
+// tuile large pour l'action principale (envoyer)
+@Composable
+private fun WideActionTile(@DrawableRes icon: Int, title: String, subtitle: String, onClick: () -> Unit) {
+    Surface(
+        onClick = onClick,
+        shape = MaterialTheme.shapes.large,
+        color = MaterialTheme.colorScheme.primaryContainer,
+        modifier = Modifier.fillMaxWidth(),
+    ) {
+        Row(
+            Modifier
+                .heightIn(min = 88.dp)
+                .padding(Spacing.lg),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(Spacing.lg),
+        ) {
+            IconTile(
+                icon,
+                tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                container = MaterialTheme.colorScheme.surface.copy(alpha = 0.35f),
+            )
+            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                Text(title, style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onPrimaryContainer)
+                Text(
+                    subtitle,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f),
+                )
+            }
+            Icon(
+                painterResource(DesignR.drawable.ic_chevron_right),
+                null,
+                Modifier.size(20.dp),
+                tint = MaterialTheme.colorScheme.onPrimaryContainer,
+            )
         }
     }
 }
