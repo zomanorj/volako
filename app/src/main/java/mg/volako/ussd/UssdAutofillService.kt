@@ -1,13 +1,12 @@
 package mg.volako.ussd
 
 import android.accessibilityservice.AccessibilityService
-import android.accessibilityservice.AccessibilityServiceInfo
 import android.content.ComponentName
 import android.content.Context
 import android.os.Bundle
+import android.util.Log
 import android.provider.Settings
 import android.view.accessibility.AccessibilityEvent
-import android.view.accessibility.AccessibilityManager
 import android.view.accessibility.AccessibilityNodeInfo
 
 // Remplit la bulle Yas a la place de l'utilisateur (doc officielle "Create your own accessibility service").
@@ -31,10 +30,16 @@ class UssdAutofillService : AccessibilityService() {
     override fun onAccessibilityEvent(event: AccessibilityEvent?) {
         val job = UssdAutofill.current() ?: return
         if (event?.packageName != PHONE_PACKAGE) return
-        val root = rootInActiveWindow ?: return
-        if (root.packageName != PHONE_PACKAGE) return
+        // la bulle Yas n'est pas toujours la fenetre "active" (Volako reste dessous) :
+        // on cherche la fenetre de l'appli Telephone parmi toutes les fenetres
+        val root = phoneRoot() ?: run {
+            Log.d(TAG, "evenement recu mais fenetre Telephone introuvable")
+            return
+        }
 
         val screen = visibleText(root)
+        // journal technique sans contenu (jamais le texte de l'ecran)
+        Log.d(TAG, "ecran Yas vu, description a taper : ${job.description != null && !job.descriptionDone}")
         when {
             screen.contains("code secret", ignoreCase = true) -> UssdAutofill.disarm()
             screen.contains("reprendre la session", ignoreCase = true) -> reply(root, "2")
@@ -46,6 +51,10 @@ class UssdAutofillService : AccessibilityService() {
     }
 
     override fun onInterrupt() = Unit
+
+    private fun phoneRoot(): AccessibilityNodeInfo? =
+        rootInActiveWindow?.takeIf { it.packageName == PHONE_PACKAGE }
+            ?: windows.firstNotNullOfOrNull { w -> w.root?.takeIf { it.packageName == PHONE_PACKAGE } }
 
     // le texte affiche par la bulle (jamais ce qui est tape dans un champ)
     private fun visibleText(node: AccessibilityNodeInfo): String {
@@ -83,6 +92,7 @@ class UssdAutofillService : AccessibilityService() {
     companion object {
         // l'appli qui affiche les bulles USSD (verifie sur le S26+)
         const val PHONE_PACKAGE = "com.android.phone"
+        private const val TAG = "VolakoAutofill"
         private val SEND_LABELS = listOf("Envoyer", "Send")
 
         // vrai quand Android a vraiment branche le service (pas seulement coche dans les Reglages)
@@ -94,11 +104,10 @@ class UssdAutofillService : AccessibilityService() {
         fun isEnabled(context: Context): Boolean = state(context) == AutofillState.ON
 
         fun state(context: Context): AutofillState {
+            // seul signal fiable : le service lui-meme dit qu'Android l'a branche
+            // (la liste d'Android compte aussi les services coches mais pas lances)
+            if (connected) return AutofillState.ON
             val me = ComponentName(context, UssdAutofillService::class.java)
-            val am = context.getSystemService(AccessibilityManager::class.java)
-            val running = connected || am?.getEnabledAccessibilityServiceList(AccessibilityServiceInfo.FEEDBACK_ALL_MASK)
-                ?.any { it.resolveInfo.serviceInfo.let { s -> ComponentName(s.packageName, s.name) == me } } == true
-            if (running) return AutofillState.ON
             // coche par l'utilisateur mais pas branche : vu sur Samsung apres une mise a jour de l'app
             val checked = Settings.Secure.getString(context.contentResolver, Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES)
                 ?.split(':')?.any { ComponentName.unflattenFromString(it) == me } == true
