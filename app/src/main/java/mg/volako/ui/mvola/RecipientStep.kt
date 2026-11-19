@@ -54,6 +54,7 @@ fun RecipientStep(
     recents: List<RecentContact>,
     onChosen: (Recipient) -> Unit,
     header: @Composable () -> Unit = {},
+    numberLabel: String = stringResource(R.string.ussd_number_label),
 ) {
     val context = LocalContext.current
     var typed by rememberSaveable { mutableStateOf("") }
@@ -79,7 +80,7 @@ fun RecipientStep(
                 typed = it.filter { c -> c.isDigit() || c == ' ' || c == '+' }.take(16)
                 typedName = null
             },
-            label = { Text(stringResource(R.string.ussd_number_label)) },
+            label = { Text(numberLabel) },
             singleLine = true,
             isError = showError,
             supportingText = { if (showError) Text(stringResource(R.string.ussd_error_number)) },

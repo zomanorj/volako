@@ -19,6 +19,7 @@ import mg.volako.core.domain.RecentContacts
 data class MvolaUiState(
     val people: List<RecentContact> = emptyList(),
     val creditTargets: List<RecentContact> = emptyList(),
+    val agents: List<RecentContact> = emptyList(),
 )
 
 class MvolaViewModel(repository: TransactionRepository) : ViewModel() {
@@ -30,6 +31,7 @@ class MvolaViewModel(repository: TransactionRepository) : ViewModel() {
             creditTargets = (RecentContacts.from(all, ContactKind.CREDIT) + RecentContacts.from(all, ContactKind.PEOPLE))
                 .distinctBy { it.phone }
                 .take(6),
+            agents = RecentContacts.from(all, ContactKind.AGENT),
         )
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), MvolaUiState())
 

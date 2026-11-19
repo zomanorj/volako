@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -46,7 +47,7 @@ import mg.volako.core.ussd.UssdResult
 import mg.volako.core.designsystem.R as DesignR
 
 // les fenetres qu'on peut ouvrir depuis l'onglet
-private enum class MvolaSheet { SEND, CREDIT, OFFER }
+private enum class MvolaSheet { SEND, WITHDRAW, CREDIT, OFFER }
 
 // Onglet MVola : les operations courantes en un appui, sans taper les longs codes #111*...
 // L'app prepare le code, l'utilisateur relit, puis tape son code secret dans la fenetre Yas.
@@ -83,17 +84,28 @@ fun MvolaScreen(
             )
         }
 
-        // l'action la plus utilisee : en grand, sur toute la largeur
-        WideActionTile(
-            icon = DesignR.drawable.ic_send_money,
-            title = stringResource(R.string.mvola_send),
-            subtitle = stringResource(R.string.mvola_send_sub),
-            onClick = { sheet = MvolaSheet.SEND },
-        )
+        SectionHeader(stringResource(R.string.mvola_section_money))
+        TileRow {
+            ActionTile(
+                icon = DesignR.drawable.ic_send_money,
+                title = stringResource(R.string.mvola_send_short),
+                subtitle = stringResource(R.string.mvola_send_sub),
+                onClick = { sheet = MvolaSheet.SEND },
+                // l'action la plus utilisee : mise en avant
+                emphasized = true,
+                modifier = Modifier.weight(1f).fillMaxHeight(),
+            )
+            ActionTile(
+                icon = DesignR.drawable.ic_local_atm,
+                title = stringResource(R.string.mvola_withdraw),
+                subtitle = stringResource(R.string.mvola_withdraw_sub),
+                onClick = { sheet = MvolaSheet.WITHDRAW },
+                modifier = Modifier.weight(1f).fillMaxHeight(),
+            )
+        }
 
         SectionHeader(stringResource(R.string.mvola_section_buy))
-        // IntrinsicSize.Max + fillMaxHeight : les deux tuiles ont toujours la meme hauteur
-        Row(Modifier.height(IntrinsicSize.Max), horizontalArrangement = Arrangement.spacedBy(Spacing.md)) {
+        TileRow {
             ActionTile(
                 icon = DesignR.drawable.ic_sim_card,
                 title = stringResource(R.string.mvola_credit),
@@ -125,6 +137,7 @@ fun MvolaScreen(
 
     when (sheet) {
         MvolaSheet.SEND -> SendSheet(mvolaBalance, state.people, onLaunch = launchAndClose, onDismiss = { sheet = null })
+        MvolaSheet.WITHDRAW -> WithdrawSheet(mvolaBalance, state.agents, onLaunch = launchAndClose, onDismiss = { sheet = null })
         MvolaSheet.CREDIT -> CreditSheet(mvolaBalance, state.creditTargets, onLaunch = launchAndClose, onDismiss = { sheet = null })
         MvolaSheet.OFFER -> OfferSheet(mvolaBalance, onLaunch = launchAndClose, onDismiss = { sheet = null })
         null -> Unit
@@ -139,21 +152,30 @@ private fun ActionTile(
     subtitle: String,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
+    emphasized: Boolean = false,
 ) {
+    val colors = MaterialTheme.colorScheme
+    val container = if (emphasized) colors.primaryContainer else colors.surfaceContainerLow
+    val onContainer = if (emphasized) colors.onPrimaryContainer else colors.onSurface
+    val onContainerVariant = if (emphasized) colors.onPrimaryContainer.copy(alpha = 0.8f) else colors.onSurfaceVariant
     Surface(
         onClick = onClick,
         shape = MaterialTheme.shapes.large,
-        color = MaterialTheme.colorScheme.surfaceContainerLow,
+        color = container,
         modifier = modifier.heightIn(min = 128.dp),
     ) {
         Column(Modifier.padding(Spacing.lg), verticalArrangement = Arrangement.spacedBy(Spacing.md)) {
-            IconTile(icon, tint = MaterialTheme.colorScheme.primary)
+            IconTile(
+                icon,
+                tint = if (emphasized) colors.onPrimaryContainer else colors.primary,
+                container = if (emphasized) colors.surface.copy(alpha = 0.35f) else colors.surfaceContainerHigh,
+            )
             Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                Text(title, style = MaterialTheme.typography.titleMedium)
+                Text(title, style = MaterialTheme.typography.titleMedium, color = onContainer)
                 Text(
                     subtitle,
                     style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    color = onContainerVariant,
                     maxLines = 2,
                 )
             }
@@ -161,43 +183,10 @@ private fun ActionTile(
     }
 }
 
-// tuile large pour l'action principale (envoyer)
+// deux tuiles cote a cote, toujours de la meme hauteur (IntrinsicSize.Max + fillMaxHeight)
 @Composable
-private fun WideActionTile(@DrawableRes icon: Int, title: String, subtitle: String, onClick: () -> Unit) {
-    Surface(
-        onClick = onClick,
-        shape = MaterialTheme.shapes.large,
-        color = MaterialTheme.colorScheme.primaryContainer,
-        modifier = Modifier.fillMaxWidth(),
-    ) {
-        Row(
-            Modifier
-                .heightIn(min = 88.dp)
-                .padding(Spacing.lg),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(Spacing.lg),
-        ) {
-            IconTile(
-                icon,
-                tint = MaterialTheme.colorScheme.onPrimaryContainer,
-                container = MaterialTheme.colorScheme.surface.copy(alpha = 0.35f),
-            )
-            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                Text(title, style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onPrimaryContainer)
-                Text(
-                    subtitle,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f),
-                )
-            }
-            Icon(
-                painterResource(DesignR.drawable.ic_chevron_right),
-                null,
-                Modifier.size(20.dp),
-                tint = MaterialTheme.colorScheme.onPrimaryContainer,
-            )
-        }
-    }
+private fun TileRow(content: @Composable RowScope.() -> Unit) {
+    Row(Modifier.height(IntrinsicSize.Max), horizontalArrangement = Arrangement.spacedBy(Spacing.md), content = content)
 }
 
 // ligne simple pour les consultations

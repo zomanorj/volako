@@ -244,4 +244,18 @@
     <string name="ussd_description_label">Description (facultatif)</string>
     <string name="ussd_description_hint">Chiffres seulement. Vide : tu l\'écriras dans la fenêtre Yas.</string>
     <string name="ussd_next_description">La fenêtre Yas va te demander la description, puis ton code secret. Vérifie le nom et le montant affichés par Yas avant de le taper.</string>
+    <string name="mvola_section_money">Argent</string>
+    <string name="mvola_send_short">Envoyer</string>
+    <string name="mvola_withdraw">Retirer</string>
+    <string name="mvola_withdraw_sub">Agent ou distributeur BRED</string>
+    <string name="ussd_withdraw_title">Retirer de l\'argent</string>
+    <string name="ussd_at_agent">Chez un agent</string>
+    <string name="ussd_at_atm">Distributeur BRED</string>
+    <string name="ussd_agent_number">Numéro de l\'agent</string>
+    <string name="ussd_op_withdraw_agent">Retrait chez un agent</string>
+    <string name="ussd_op_withdraw_atm">Retrait au distributeur BRED</string>
+    <string name="ussd_row_agent">Agent</string>
+    <string name="ussd_row_how">Comment</string>
+    <string name="ussd_fee_from_balance">Prélevés sur ton solde MVola</string>
+    <string name="ussd_atm_how">Code temporaire par SMS, à taper au distributeur</string>
 </resources>
