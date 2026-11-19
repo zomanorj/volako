@@ -1,6 +1,7 @@
 package mg.volako.ui.mvola
 
 import android.Manifest
+import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
@@ -70,7 +71,11 @@ fun RecipientStep(
     onChosen: (Recipient) -> Unit,
     header: @Composable () -> Unit = {},
 ) {
+    val context = LocalContext.current
     var query by rememberSaveable { mutableStateOf("") }
+    // pave numerique pour un numero qui n'est pas dans le repertoire
+    var padMode by rememberSaveable { mutableStateOf(false) }
+    val pasteNotFound = stringResource(R.string.ussd_paste_none)
     // seulement les numeros Yas (les autres operateurs ne passent pas par ces menus)
     val results = remember(query, people.recents, people.contacts) {
         ContactSearch.search(query, people.recents, people.contacts, accept = { YasNumber.parse(it) != null })
@@ -82,6 +87,10 @@ fun RecipientStep(
     Column(verticalArrangement = Arrangement.spacedBy(Spacing.lg)) {
         Text(title, style = MaterialTheme.typography.titleLarge)
         header()
+        if (padMode) {
+            NumberPad(names = names, onChosen = onChosen, onBack = { padMode = false })
+            return@Column
+        }
         OutlinedTextField(
             value = query,
             onValueChange = { query = it.take(40) },
@@ -99,6 +108,20 @@ fun RecipientStep(
             },
             keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Words, imeAction = ImeAction.Done),
             modifier = Modifier.fillMaxWidth(),
+        )
+
+        // bien visible : on peut toujours taper ou coller un numero qui n'est pas un contact
+        NumberShortcuts(
+            showPaste = remember { clipboardHasText(context) },
+            onType = { padMode = true },
+            onPaste = {
+                val pasted = pastedYasNumber(context)
+                if (pasted != null) {
+                    onChosen(Recipient(pasted, names[pasted.digits]))
+                } else {
+                    Toast.makeText(context, pasteNotFound, Toast.LENGTH_SHORT).show()
+                }
+            },
         )
 
         // un numero complet tape a la main : on le propose tout en haut
@@ -127,6 +150,7 @@ fun RecipientStep(
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
+            TextButton(onClick = { padMode = true }) { Text(stringResource(R.string.ussd_type_number)) }
         }
     }
 }

@@ -27,4 +27,22 @@ class YasNumberTest {
     fun `affichage comme Yas`() {
         assertEquals("034 20 454 85", YasNumber.parse("0342045485")!!.pretty())
     }
+
+    @Test
+    fun `mise en forme pendant la saisie`() {
+        assertEquals("", YasNumber.formatPartial(""))
+        assertEquals("03", YasNumber.formatPartial("03"))
+        assertEquals("034 2", YasNumber.formatPartial("0342"))
+        assertEquals("034 20 454", YasNumber.formatPartial("03420454"))
+        assertEquals("034 20 454 85", YasNumber.formatPartial("034204548599"))
+    }
+
+    @Test
+    fun `debut qui ne peut pas etre Yas`() {
+        assertEquals(false, YasNumber.cannotBeYas("0"))
+        assertEquals(false, YasNumber.cannotBeYas("03"))
+        assertEquals(false, YasNumber.cannotBeYas("038"))
+        assertEquals(true, YasNumber.cannotBeYas("032"))
+        assertEquals(true, YasNumber.cannotBeYas("4"))
+    }
 }

@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -31,17 +32,23 @@ fun NumericKeypad(
     onBackspace: () -> Unit,
     backspaceDescription: String,
     modifier: Modifier = Modifier,
+    // "000" pour les montants ; null pour un numero de telephone (touche vide)
+    bottomLeftKey: String? = "000",
 ) {
     val rows = listOf(
         listOf("1", "2", "3"),
         listOf("4", "5", "6"),
         listOf("7", "8", "9"),
-        listOf("000", "0", BACKSPACE),
+        listOf(bottomLeftKey ?: EMPTY, "0", BACKSPACE),
     )
     Column(modifier, verticalArrangement = Arrangement.spacedBy(Spacing.sm)) {
         rows.forEach { row ->
             Row(horizontalArrangement = Arrangement.spacedBy(Spacing.sm)) {
                 row.forEach { key ->
+                    if (key == EMPTY) {
+                        Spacer(Modifier.weight(1f))
+                        return@forEach
+                    }
                     Key(
                         modifier = Modifier.weight(1f),
                         onClick = { if (key == BACKSPACE) onBackspace() else onDigits(key) },
@@ -75,3 +82,4 @@ private fun Key(modifier: Modifier, onClick: () -> Unit, content: @Composable ()
 }
 
 private const val BACKSPACE = "<"
+private const val EMPTY = ""

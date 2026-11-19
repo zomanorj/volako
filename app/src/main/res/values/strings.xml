@@ -294,8 +294,14 @@
     <string name="ussd_use_number">Utiliser ce numéro</string>
     <string name="ussd_suggestions">Suggestions</string>
     <string name="ussd_contacts">Contacts</string>
-    <string name="ussd_no_match">Aucun contact Yas ne correspond. Tu peux aussi taper le numéro.</string>
+    <string name="ussd_no_match">Aucun contact Yas ne correspond.</string>
     <string name="ussd_contacts_title">Retrouve tes contacts ici</string>
     <string name="ussd_contacts_body">Volako affiche les noms de ton répertoire et te laisse les chercher. Il les lit seulement, rien ne quitte ton téléphone.</string>
     <string name="ussd_contacts_allow">Autoriser</string>
+    <string name="ussd_type_number">Taper un numéro</string>
+    <string name="ussd_paste_number">Coller un numéro</string>
+    <string name="ussd_paste_none">Pas de numéro Yas dans ce que tu as copié</string>
+    <string name="ussd_number_wrong_start">Un numéro Yas commence par 034 ou 038</string>
+    <string name="ussd_number_unknown">Numéro pas dans tes contacts</string>
+    <string name="ussd_back_to_contacts">Revenir aux contacts</string>
 </resources>

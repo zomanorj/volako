@@ -13,6 +13,27 @@ value class YasNumber private constructor(val digits: String) {
     companion object {
         private val YAS_PREFIXES = listOf("034", "038")
 
+        // "03420" -> "034 20" : met en forme pendant la saisie (3-2-3-2 comme les messages Yas)
+        fun formatPartial(digits: String): String {
+            val d = digits.filter { it.isDigit() }.take(10)
+            val sizes = listOf(3, 2, 3, 2)
+            val parts = mutableListOf<String>()
+            var start = 0
+            for (size in sizes) {
+                if (start >= d.length) break
+                parts += d.substring(start, minOf(start + size, d.length))
+                start += size
+            }
+            return parts.joinToString(" ")
+        }
+
+        // le debut tape ne peut plus devenir un numero Yas (ex : "032", "04")
+        fun cannotBeYas(digits: String): Boolean {
+            val d = digits.filter { it.isDigit() }
+            if (d.isEmpty()) return false
+            return YAS_PREFIXES.none { it.startsWith(d.take(3)) }
+        }
+
         // Accepte "034 12 345 67", "(034) 1234567", "+261341234567"... null si ce n'est pas un numero Yas
         fun parse(raw: String): YasNumber? {
             var d = raw.filter { it.isDigit() }
