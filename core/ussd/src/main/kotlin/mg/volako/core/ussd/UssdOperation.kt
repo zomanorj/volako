@@ -56,7 +56,8 @@ enum class UssdError {
     INVALID_MOBILE_NUMBER,   // pas un numero mobile malgache (envoi : Yas, Orange, Airtel)
     AMOUNT_TOO_SMALL,
     AMOUNT_TOO_BIG,
-    DESCRIPTION_TOO_LONG,
+    DESCRIPTION_TOO_LONG,    // Yas : 20 caracteres max
+    DESCRIPTION_HAS_SPACE,   // Yas refuse les espaces
     NO_AIRTIME_CODE,         // on ne connait pas de code #322 pour cette offre
 }
 

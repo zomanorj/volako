@@ -43,6 +43,7 @@ import mg.volako.core.designsystem.theme.Sizes
 import mg.volako.core.designsystem.theme.Spacing
 import mg.volako.core.domain.RecentContact
 import mg.volako.core.ussd.MvolaUssd
+import mg.volako.ussd.AutofillState
 import mg.volako.core.ussd.UssdOperation
 import mg.volako.core.ussd.UssdRequest
 import mg.volako.core.ussd.UssdResult
@@ -63,7 +64,8 @@ fun MvolaScreen(
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val launch = rememberUssdLauncher()
-    val autofillOn = rememberAutofillEnabled()
+    val autofill = rememberAutofillState()
+    val autofillOn = autofill == AutofillState.ON
     var showAutofillDialog by rememberSaveable { mutableStateOf(false) }
     var sheet by rememberSaveable { mutableStateOf<MvolaSheet?>(null) }
     var openFavoriteId by rememberSaveable { mutableStateOf<Long?>(null) }
@@ -167,7 +169,13 @@ fun MvolaScreen(
         ActionRow(
             icon = if (autofillOn) DesignR.drawable.ic_task_alt else DesignR.drawable.ic_autorenew,
             title = stringResource(R.string.autofill_row_title),
-            subtitle = stringResource(if (autofillOn) R.string.autofill_row_on else R.string.autofill_row_off),
+            subtitle = stringResource(
+                when (autofill) {
+                    AutofillState.ON -> R.string.autofill_row_on
+                    AutofillState.PAUSED -> R.string.autofill_row_paused
+                    AutofillState.OFF -> R.string.autofill_row_off
+                },
+            ),
             onClick = { showAutofillDialog = true },
         )
 

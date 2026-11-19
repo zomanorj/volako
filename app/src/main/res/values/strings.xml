@@ -222,7 +222,8 @@
     <string name="ussd_error_number">Ce n\'est pas un numéro Yas (034 ou 038, 10 chiffres)</string>
     <string name="ussd_error_small">Minimum %1$s</string>
     <string name="ussd_error_big">Maximum %1$s</string>
-    <string name="ussd_error_desc_long">Description trop longue</string>
+    <string name="ussd_error_desc_long">20 caractères au maximum</string>
+    <string name="ussd_error_desc_space">Pas d\'espace dans la description (règle Yas)</string>
     <string name="ussd_error_no_airtime">Pas de code connu pour payer cette offre avec le crédit</string>
     <string name="ussd_no_phone">Impossible d\'ouvrir le téléphone sur cet appareil</string>
     <string name="mvola_send">Envoyer de l\'argent</string>
@@ -243,7 +244,7 @@
     <string name="ussd_no">Non</string>
     <string name="ussd_yes">Oui</string>
     <string name="ussd_description_label">Description (facultatif)</string>
-    <string name="ussd_description_hint">Vide : Yas te la demandera.</string>
+    <string name="ussd_description_hint">Sans espace. Vide : Yas te la demandera.</string>
     <string name="ussd_next_description">Yas va te demander la description, puis ton code secret.</string>
     <string name="mvola_section_money">Argent</string>
     <string name="mvola_send_short">Envoyer</string>
@@ -328,4 +329,9 @@ Volako agit seulement dans la fenêtre Yas, pendant 90 secondes après ton appui
     <string name="ussd_next_fill">Volako tapera « %1$s » pour toi, puis Yas te demandera ton code secret.</string>
     <string name="ussd_next_copy">« %1$s » sera copiée : colle-la quand Yas demande la description. Ton clavier la propose aussi.</string>
     <string name="ussd_autofill_off_short">Remplissage automatique désactivé</string>
+    <string name="autofill_row_paused">En pause · touche pour le relancer</string>
+    <string name="autofill_paused_title">Remplissage en pause</string>
+    <string name="autofill_paused_body">Android a mis le remplissage en pause, ça arrive après une mise à jour de Volako.\n\nPour le relancer : dans Réglages &gt; Accessibilité &gt; Applications installées, désactive puis réactive « Volako : remplissage MVola ».</string>
+    <string name="ussd_autofill_paused_short">Remplissage automatique en pause</string>
+    <string name="ussd_restart">Relancer</string>
 </resources>

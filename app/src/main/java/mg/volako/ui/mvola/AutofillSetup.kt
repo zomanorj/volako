@@ -17,27 +17,32 @@ import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
 import mg.volako.R
+import mg.volako.ussd.AutofillState
 import mg.volako.ussd.UssdAutofillService
 import mg.volako.core.designsystem.R as DesignR
 
-// Le remplissage auto est-il active ? (relu a chaque retour dans l'app, ex : depuis les Reglages)
+// Etat du remplissage auto (relu a chaque retour dans l'app, ex : depuis les Reglages)
 @Composable
-fun rememberAutofillEnabled(): Boolean {
+fun rememberAutofillState(): AutofillState {
     val context = LocalContext.current
-    var enabled by remember { mutableStateOf(UssdAutofillService.isEnabled(context)) }
-    LifecycleEventEffect(Lifecycle.Event.ON_RESUME) { enabled = UssdAutofillService.isEnabled(context) }
-    return enabled
+    var state by remember { mutableStateOf(UssdAutofillService.state(context)) }
+    LifecycleEventEffect(Lifecycle.Event.ON_RESUME) { state = UssdAutofillService.state(context) }
+    return state
 }
+
+@Composable
+fun rememberAutofillEnabled(): Boolean = rememberAutofillState() == AutofillState.ON
 
 // On explique AVANT d'envoyer vers les Reglages (permission sensible : l'utilisateur doit comprendre)
 @Composable
 fun AutofillDialog(onDismiss: () -> Unit) {
     val context = LocalContext.current
+    val paused = rememberAutofillState() == AutofillState.PAUSED
     AlertDialog(
         onDismissRequest = onDismiss,
         icon = { Icon(painterResource(DesignR.drawable.ic_lock), null) },
-        title = { Text(stringResource(R.string.autofill_dialog_title)) },
-        text = { Text(stringResource(R.string.autofill_dialog_body)) },
+        title = { Text(stringResource(if (paused) R.string.autofill_paused_title else R.string.autofill_dialog_title)) },
+        text = { Text(stringResource(if (paused) R.string.autofill_paused_body else R.string.autofill_dialog_body)) },
         confirmButton = {
             TextButton(onClick = {
                 onDismiss()

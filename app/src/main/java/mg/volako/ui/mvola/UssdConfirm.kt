@@ -155,5 +155,6 @@ fun ussdErrorText(error: UssdError): String = when (error) {
     UssdError.AMOUNT_TOO_SMALL -> stringResource(R.string.ussd_error_small, formatAriary(MvolaUssd.MIN_AMOUNT))
     UssdError.AMOUNT_TOO_BIG -> stringResource(R.string.ussd_error_big, formatAriary(MvolaUssd.MAX_AMOUNT))
     UssdError.DESCRIPTION_TOO_LONG -> stringResource(R.string.ussd_error_desc_long)
+    UssdError.DESCRIPTION_HAS_SPACE -> stringResource(R.string.ussd_error_desc_space)
     UssdError.NO_AIRTIME_CODE -> stringResource(R.string.ussd_error_no_airtime)
 }

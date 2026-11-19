@@ -40,6 +40,7 @@ import mg.volako.core.ussd.UssdOperation
 import mg.volako.core.ussd.UssdRequest
 import mg.volako.core.ussd.UssdResult
 import mg.volako.core.ussd.MgNumber
+import mg.volako.ussd.AutofillState
 
 // Envoyer de l'argent : destinataire -> montant -> resume (frais de retrait, description) -> Lancer
 @OptIn(ExperimentalMaterial3Api::class)
@@ -164,14 +165,17 @@ private fun SendOptions(
                 }
             }
         }
-        val autofillOn = rememberAutofillEnabled()
+        val autofill = rememberAutofillState()
+        val autofillOn = autofill == AutofillState.ON
         var showAutofillDialog by remember { mutableStateOf(false) }
         // des lettres : elles ne peuvent pas aller dans le code, Volako les tapera dans la bulle
         val hasLetters = description.any { !it.isDigit() && !it.isWhitespace() }
         OutlinedTextField(
             value = description,
-            // un peu plus que la limite : on montre l'erreur au lieu de couper en silence
-            onValueChange = { onDescription(it.take(MvolaUssd.MAX_DESCRIPTION + 5)) },
+            // regle Yas : pas d'espace, 20 caracteres max -> on bloque des la frappe (pas d'erreur a corriger apres)
+            onValueChange = { onDescription(it.filterNot(Char::isWhitespace).take(MvolaUssd.MAX_DESCRIPTION)) },
+            // compteur : on voit tout de suite la place qui reste
+            suffix = { Text("${description.length} / ${MvolaUssd.MAX_DESCRIPTION}", style = MaterialTheme.typography.bodySmall) },
             label = { Text(stringResource(R.string.ussd_description_label)) },
             singleLine = true,
             isError = error != null,
@@ -188,12 +192,14 @@ private fun SendOptions(
         if (hasLetters && !autofillOn && error == null) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(
-                    stringResource(R.string.ussd_autofill_off_short),
+                    stringResource(if (autofill == AutofillState.PAUSED) R.string.ussd_autofill_paused_short else R.string.ussd_autofill_off_short),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.weight(1f),
                 )
-                TextButton(onClick = { showAutofillDialog = true }) { Text(stringResource(R.string.ussd_activate)) }
+                TextButton(onClick = { showAutofillDialog = true }) {
+                    Text(stringResource(if (autofill == AutofillState.PAUSED) R.string.ussd_restart else R.string.ussd_activate))
+                }
             }
         }
         if (showAutofillDialog) AutofillDialog(onDismiss = { showAutofillDialog = false })

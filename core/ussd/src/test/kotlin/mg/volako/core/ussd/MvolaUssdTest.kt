@@ -94,10 +94,15 @@ class MvolaUssdTest {
     @Test
     fun `description avec lettres tapee ensuite dans la bulle`() {
         // jamais dans le code : sur le clavier "loyer" deviendrait 56937
-        val r = ready(UssdOperation.Send("0342045485", 100, payRecipientFee = false, description = "  loyer   novembre "))
+        val r = ready(UssdOperation.Send("0342045485", 100, payRecipientFee = false, description = " loyerNovembre "))
         assertEquals("#111*1*2*0342045485*100*2#", r.code)
         assertEquals(NextOnPhone.DESCRIPTION, r.next)
-        assertEquals("loyer novembre", r.fillDescription)
+        assertEquals("loyerNovembre", r.fillDescription)
+    }
+
+    @Test
+    fun `description avec un espace refusee (regle Yas)`() {
+        assertEquals(UssdError.DESCRIPTION_HAS_SPACE, error(UssdOperation.Send("0342045485", 100, false, "loyer novembre")))
     }
 
     @Test

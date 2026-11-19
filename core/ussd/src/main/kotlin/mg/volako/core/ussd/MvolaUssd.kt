@@ -7,7 +7,8 @@ object MvolaUssd {
 
     const val MIN_AMOUNT = 100L          // plus petit montant teste
     const val MAX_AMOUNT = 20_000_000L   // plafond MVola par operation (mvola.mg)
-    const val MAX_DESCRIPTION = 40
+    // limite Yas (dit par l'utilisateur le 19/11/2026) : 20 caracteres, sans espace
+    const val MAX_DESCRIPTION = 20
     // frais Yas pour un credit ou une offre vers un autre numero (mvola.mg, quel que soit le montant)
     const val OTHER_NUMBER_FEE = 150L
 
@@ -55,7 +56,8 @@ object MvolaUssd {
             add(MVOLA); add("2"); add(n); add(op.amount)
             if (n.isYas) add(if (op.payRecipientFee) "1" else "2")
         }
-        val desc = op.description?.trim()?.replace(Regex("\\s+"), " ").orEmpty()
+        val desc = op.description?.trim().orEmpty()
+        if (desc.any { it.isWhitespace() }) return refused(UssdError.DESCRIPTION_HAS_SPACE)
         if (desc.length > MAX_DESCRIPTION) return refused(UssdError.DESCRIPTION_TOO_LONG)
         return when {
             desc.isEmpty() -> ready(code(*steps.toTypedArray()), NextOnPhone.DESCRIPTION)

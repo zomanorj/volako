@@ -5,6 +5,7 @@ import android.accessibilityservice.AccessibilityServiceInfo
 import android.content.ComponentName
 import android.content.Context
 import android.os.Bundle
+import android.provider.Settings
 import android.view.accessibility.AccessibilityEvent
 import android.view.accessibility.AccessibilityManager
 import android.view.accessibility.AccessibilityNodeInfo
@@ -16,6 +17,16 @@ import android.view.accessibility.AccessibilityNodeInfo
 // - ecran du code secret : on arrete tout, on ne tape rien
 // - on ne lit jamais le contenu d'un champ de saisie
 class UssdAutofillService : AccessibilityService() {
+
+    override fun onServiceConnected() {
+        super.onServiceConnected()
+        connected = true
+    }
+
+    override fun onDestroy() {
+        connected = false
+        super.onDestroy()
+    }
 
     override fun onAccessibilityEvent(event: AccessibilityEvent?) {
         val job = UssdAutofill.current() ?: return
@@ -74,12 +85,27 @@ class UssdAutofillService : AccessibilityService() {
         const val PHONE_PACKAGE = "com.android.phone"
         private val SEND_LABELS = listOf("Envoyer", "Send")
 
-        // l'utilisateur a-t-il active le service dans Reglages > Accessibilite ?
-        fun isEnabled(context: Context): Boolean {
+        // vrai quand Android a vraiment branche le service (pas seulement coche dans les Reglages)
+        @Volatile
+        var connected: Boolean = false
+            private set
+
+        // le service peut vraiment remplir la bulle maintenant
+        fun isEnabled(context: Context): Boolean = state(context) == AutofillState.ON
+
+        fun state(context: Context): AutofillState {
             val me = ComponentName(context, UssdAutofillService::class.java)
-            val am = context.getSystemService(AccessibilityManager::class.java) ?: return false
-            return am.getEnabledAccessibilityServiceList(AccessibilityServiceInfo.FEEDBACK_ALL_MASK)
-                .any { it.resolveInfo.serviceInfo.let { s -> ComponentName(s.packageName, s.name) == me } }
+            val am = context.getSystemService(AccessibilityManager::class.java)
+            val running = connected || am?.getEnabledAccessibilityServiceList(AccessibilityServiceInfo.FEEDBACK_ALL_MASK)
+                ?.any { it.resolveInfo.serviceInfo.let { s -> ComponentName(s.packageName, s.name) == me } } == true
+            if (running) return AutofillState.ON
+            // coche par l'utilisateur mais pas branche : vu sur Samsung apres une mise a jour de l'app
+            val checked = Settings.Secure.getString(context.contentResolver, Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES)
+                ?.split(':')?.any { ComponentName.unflattenFromString(it) == me } == true
+            return if (checked) AutofillState.PAUSED else AutofillState.OFF
         }
     }
 }
+
+// OFF : pas active ; ON : pret ; PAUSED : active dans les Reglages mais Android ne l'a pas relance
+enum class AutofillState { OFF, ON, PAUSED }
