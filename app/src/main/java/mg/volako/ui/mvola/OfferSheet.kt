@@ -41,7 +41,7 @@ import mg.volako.core.ussd.OfferFamily
 import mg.volako.core.ussd.UssdOperation
 import mg.volako.core.ussd.UssdRequest
 import mg.volako.core.ussd.UssdResult
-import mg.volako.core.ussd.YasNumber
+import mg.volako.core.ussd.MgNumber
 import mg.volako.core.ussd.YasOffer
 import mg.volako.core.ussd.YasOffers
 import mg.volako.core.designsystem.R as DesignR
@@ -66,7 +66,7 @@ fun OfferSheet(
     var chosenId by rememberSaveable { mutableStateOf<String?>(null) }
 
     val chosen = chosenId?.let(YasOffers::byId)
-    val recipient = otherNumber?.let(YasNumber::parse)?.let { Recipient(it, otherName) }
+    val recipient = otherNumber?.let(MgNumber::parse)?.let { Recipient(it, otherName) }
     // le credit telephonique ne marche que pour soi (pas de code #322 pour un autre)
     val payAirtime = withAirtime && !forOther
 

@@ -138,6 +138,7 @@ fun SecretNote(text: String, modifier: Modifier = Modifier) {
 @Composable
 fun ussdErrorText(error: UssdError): String = when (error) {
     UssdError.INVALID_NUMBER -> stringResource(R.string.ussd_error_number)
+    UssdError.INVALID_MOBILE_NUMBER -> stringResource(R.string.ussd_error_mobile_number)
     UssdError.AMOUNT_TOO_SMALL -> stringResource(R.string.ussd_error_small, formatAriary(MvolaUssd.MIN_AMOUNT))
     UssdError.AMOUNT_TOO_BIG -> stringResource(R.string.ussd_error_big, formatAriary(MvolaUssd.MAX_AMOUNT))
     UssdError.DESCRIPTION_NOT_DIGITS -> stringResource(R.string.ussd_error_desc_digits)

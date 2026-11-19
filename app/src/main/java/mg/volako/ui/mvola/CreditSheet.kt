@@ -29,7 +29,7 @@ import mg.volako.core.ussd.MvolaUssd
 import mg.volako.core.ussd.UssdOperation
 import mg.volako.core.ussd.UssdRequest
 import mg.volako.core.ussd.UssdResult
-import mg.volako.core.ussd.YasNumber
+import mg.volako.core.ussd.MgNumber
 
 // Credit : pour moi, ou pour un autre numero (destinataire -> montant -> resume -> Lancer)
 @OptIn(ExperimentalMaterial3Api::class)
@@ -49,7 +49,7 @@ fun CreditSheet(
     var confirming by rememberSaveable { mutableStateOf(false) }
 
     val amount = digits.toLongOrNull() ?: 0L
-    val recipient = otherNumber?.let(YasNumber::parse)?.let { Recipient(it, otherName) }
+    val recipient = otherNumber?.let(MgNumber::parse)?.let { Recipient(it, otherName) }
     val operation =
         if (forOther) UssdOperation.CreditForOther(recipient?.number?.digits.orEmpty(), amount) else UssdOperation.CreditForMe(amount)
     val result = MvolaUssd.build(operation)

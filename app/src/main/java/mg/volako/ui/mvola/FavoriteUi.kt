@@ -35,7 +35,7 @@ import mg.volako.core.model.Favorite
 import mg.volako.core.model.FavoriteKind
 import mg.volako.core.ussd.MvolaUssd
 import mg.volako.core.ussd.UssdResult
-import mg.volako.core.ussd.YasNumber
+import mg.volako.core.ussd.MgNumber
 import mg.volako.core.ussd.YasOffers
 import mg.volako.core.designsystem.R as DesignR
 
@@ -64,7 +64,7 @@ fun Favorite.title(): String {
 // "Elyse · 034 20 454 85" ou "Pour mon numero"
 @Composable
 fun Favorite.subtitle(): String {
-    val number = phone?.let(YasNumber::parse)
+    val number = phone?.let(MgNumber::parseAny)
     return when {
         number != null -> name?.let { "$it · ${number.pretty()}" } ?: number.pretty()
         kind == FavoriteKind.OFFER_ME -> offerId?.let(YasOffers::byId)?.let { "${formatAriary(it.price)} · ${stringResource(R.string.fav_for_me)}" }

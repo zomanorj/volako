@@ -35,7 +35,7 @@ import mg.volako.core.ussd.MvolaUssd
 import mg.volako.core.ussd.UssdOperation
 import mg.volako.core.ussd.UssdRequest
 import mg.volako.core.ussd.UssdResult
-import mg.volako.core.ussd.YasNumber
+import mg.volako.core.ussd.MgNumber
 
 // Envoyer de l'argent : destinataire -> montant -> resume (frais de retrait, description) -> Lancer
 @OptIn(ExperimentalMaterial3Api::class)
@@ -55,7 +55,8 @@ fun SendSheet(
     var description by rememberSaveable { mutableStateOf("") }
 
     val amount = digits.toLongOrNull() ?: 0L
-    val recipient = number?.let(YasNumber::parse)?.let { Recipient(it, name) }
+    // l'envoi marche aussi vers Orange et Airtel
+    val recipient = number?.let(MgNumber::parseAny)?.let { Recipient(it, name) }
     val operation = UssdOperation.Send(recipient?.number?.digits.orEmpty(), amount, payRecipientFee = payFee, description = description)
     val result = MvolaUssd.build(operation)
 
@@ -80,6 +81,7 @@ fun SendSheet(
                         number = it.number.digits
                         name = it.name
                     },
+                    allowOtherOperators = true,
                 )
 
                 confirming -> {
@@ -87,12 +89,13 @@ fun SendSheet(
                     val request = (result as? UssdResult.Ready)?.request
                         ?: (MvolaUssd.build(UssdOperation.Send(recipient.number.digits, amount, payFee, null)) as UssdResult.Ready).request
                     UssdConfirm(
-                        rows = listOf(
-                            stringResource(R.string.ussd_row_operation) to stringResource(R.string.ussd_op_send),
-                            stringResource(R.string.ussd_row_to) to recipient.label(),
-                            stringResource(R.string.ussd_row_amount) to formatAriary(amount),
-                            stringResource(R.string.ussd_row_fee) to stringResource(R.string.ussd_fee_shown_by_yas),
-                        ),
+                        rows = buildList {
+                            add(stringResource(R.string.ussd_row_operation) to stringResource(R.string.ussd_op_send))
+                            add(stringResource(R.string.ussd_row_to) to recipient.label())
+                            if (!recipient.number.isYas) add(stringResource(R.string.ussd_row_network) to recipient.number.operator.label)
+                            add(stringResource(R.string.ussd_row_amount) to formatAriary(amount))
+                            add(stringResource(R.string.ussd_row_fee) to stringResource(R.string.ussd_fee_shown_by_yas))
+                        },
                         request = request,
                         launchEnabled = result is UssdResult.Ready,
                         onLaunch = { (result as? UssdResult.Ready)?.let { onLaunch(it.request) } },
@@ -100,6 +103,8 @@ fun SendSheet(
                         onSaveFavorite = { favoriteOf(operation, recipient.name)?.let(onSaveFavorite) },
                         options = {
                             SendOptions(
+                                // vers Orange / Airtel, Yas ne pose pas la question des frais de retrait
+                                showFeeChoice = recipient.number.isYas,
                                 payFee = payFee,
                                 onPayFee = { payFee = it },
                                 description = description,
@@ -130,6 +135,7 @@ fun SendSheet(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun SendOptions(
+    showFeeChoice: Boolean,
     payFee: Boolean,
     onPayFee: (Boolean) -> Unit,
     description: String,
@@ -137,15 +143,17 @@ private fun SendOptions(
     error: String?,
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(Spacing.md)) {
-        Text(stringResource(R.string.ussd_pay_fee_question), style = MaterialTheme.typography.titleSmall)
-        val options = listOf(false to R.string.ussd_no, true to R.string.ussd_yes)
-        SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth()) {
-            options.forEachIndexed { index, (value, label) ->
-                SegmentedButton(
-                    selected = payFee == value,
-                    onClick = { onPayFee(value) },
-                    shape = SegmentedButtonDefaults.itemShape(index, options.size),
-                ) { Text(stringResource(label)) }
+        if (showFeeChoice) {
+            Text(stringResource(R.string.ussd_pay_fee_question), style = MaterialTheme.typography.titleSmall)
+            val options = listOf(false to R.string.ussd_no, true to R.string.ussd_yes)
+            SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth()) {
+                options.forEachIndexed { index, (value, label) ->
+                    SegmentedButton(
+                        selected = payFee == value,
+                        onClick = { onPayFee(value) },
+                        shape = SegmentedButtonDefaults.itemShape(index, options.size),
+                    ) { Text(stringResource(label)) }
+                }
             }
         }
         OutlinedTextField(
@@ -158,6 +166,12 @@ private fun SendOptions(
             supportingText = { Text(error ?: stringResource(R.string.ussd_description_hint)) },
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number, imeAction = ImeAction.Done),
             modifier = Modifier.fillMaxWidth(),
+        )
+        // vu par l'utilisateur : numero inconnu ou sans compte -> Yas propose un "coupon"
+        Text(
+            stringResource(R.string.ussd_coupon_hint),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
     }
 }

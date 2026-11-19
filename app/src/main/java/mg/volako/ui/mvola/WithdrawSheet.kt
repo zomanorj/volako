@@ -30,7 +30,7 @@ import mg.volako.core.ussd.MvolaUssd
 import mg.volako.core.ussd.UssdOperation
 import mg.volako.core.ussd.UssdRequest
 import mg.volako.core.ussd.UssdResult
-import mg.volako.core.ussd.YasNumber
+import mg.volako.core.ussd.MgNumber
 
 // Retirer : chez un agent (agent -> montant -> resume) ou au distributeur BRED (resume direct)
 @OptIn(ExperimentalMaterial3Api::class)
@@ -49,7 +49,7 @@ fun WithdrawSheet(
     var confirming by rememberSaveable { mutableStateOf(false) }
 
     val amount = digits.toLongOrNull() ?: 0L
-    val agent = agentNumber?.let(YasNumber::parse)?.let { Recipient(it, agentName) }
+    val agent = agentNumber?.let(MgNumber::parse)?.let { Recipient(it, agentName) }
     val operation = if (atAtm) UssdOperation.WithdrawAtAtm else UssdOperation.WithdrawAtAgent(agent?.number?.digits.orEmpty(), amount)
     val result = MvolaUssd.build(operation)
     val where = @Composable { Where(atAtm, onChange = { atAtm = it }) }

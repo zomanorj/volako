@@ -47,12 +47,16 @@ import mg.volako.core.domain.ContactSearch
 import mg.volako.core.domain.ContactSuggestion
 import mg.volako.core.domain.RecentContact
 import mg.volako.core.model.PhoneContact
-import mg.volako.core.ussd.YasNumber
+import mg.volako.core.ussd.MgNumber
 import mg.volako.core.designsystem.R as DesignR
 
 // Le destinataire choisi (le nom est juste pour l'affichage, Yas montrera le vrai nom)
-data class Recipient(val number: YasNumber, val name: String?) {
-    fun label(): String = name?.let { "$it · ${number.pretty()}" } ?: number.pretty()
+data class Recipient(val number: MgNumber, val name: String?) {
+    // le reseau n'est precise que hors Yas (c'est l'exception)
+    fun label(): String {
+        val n = if (number.isYas) number.pretty() else "${number.pretty()} (${number.operator.label})"
+        return name?.let { "$it · $n" } ?: n
+    }
 }
 
 // Ce qu'il faut pour proposer des numeros : les recents (SMS) + le repertoire du telephone
@@ -70,7 +74,10 @@ fun RecipientStep(
     people: PeoplePicker,
     onChosen: (Recipient) -> Unit,
     header: @Composable () -> Unit = {},
+    // envoi d'argent : on accepte aussi Orange et Airtel
+    allowOtherOperators: Boolean = false,
 ) {
+    val parse: (String) -> MgNumber? = if (allowOtherOperators) MgNumber::parseAny else MgNumber::parse
     val context = LocalContext.current
     var query by rememberSaveable { mutableStateOf("") }
     // pave numerique pour un numero qui n'est pas dans le repertoire
@@ -78,9 +85,9 @@ fun RecipientStep(
     val pasteNotFound = stringResource(R.string.ussd_paste_none)
     // seulement les numeros Yas (les autres operateurs ne passent pas par ces menus)
     val results = remember(query, people.recents, people.contacts) {
-        ContactSearch.search(query, people.recents, people.contacts, accept = { YasNumber.parse(it) != null })
+        ContactSearch.search(query, people.recents, people.contacts, accept = { parse(it) != null })
     }
-    val typedNumber = YasNumber.parse(query)
+    val typedNumber = parse(query)
     val names = remember(people.contacts) { ContactSearch.namesByPhone(people.contacts) }
     val looksLikeNumber = query.count(Char::isDigit) >= 10 && query.none(Char::isLetter)
 
@@ -88,7 +95,7 @@ fun RecipientStep(
         Text(title, style = MaterialTheme.typography.titleLarge)
         header()
         if (padMode) {
-            NumberPad(names = names, onChosen = onChosen, onBack = { padMode = false })
+            NumberPad(names = names, onChosen = onChosen, onBack = { padMode = false }, allowOtherOperators = allowOtherOperators)
             return@Column
         }
         OutlinedTextField(
@@ -115,7 +122,7 @@ fun RecipientStep(
             showPaste = remember { clipboardHasText(context) },
             onType = { padMode = true },
             onPaste = {
-                val pasted = pastedYasNumber(context)
+                val pasted = pastedNumber(context, allowOtherOperators)
                 if (pasted != null) {
                     onChosen(Recipient(pasted, names[pasted.digits]))
                 } else {
@@ -134,15 +141,15 @@ fun RecipientStep(
             )
         }
 
-        if (!people.contactsAllowed) ContactsPermissionCard(people.onContactsAllowed, onPicked = onChosen)
+        if (!people.contactsAllowed) ContactsPermissionCard(people.onContactsAllowed, parse, onPicked = onChosen)
 
         if (results.suggestions.isNotEmpty()) {
             SectionHeader(stringResource(R.string.ussd_suggestions))
-            PeopleList(results.suggestions, onChosen)
+            PeopleList(results.suggestions, parse, onChosen)
         }
         if (results.contacts.isNotEmpty()) {
             SectionHeader(stringResource(R.string.ussd_contacts))
-            PeopleList(results.contacts, onChosen)
+            PeopleList(results.contacts, parse, onChosen)
         }
         if (query.isNotBlank() && typedNumber == null && results.suggestions.isEmpty() && results.contacts.isEmpty()) {
             Text(
@@ -156,13 +163,17 @@ fun RecipientStep(
 }
 
 @Composable
-private fun PeopleList(list: List<ContactSuggestion>, onChosen: (Recipient) -> Unit) {
+private fun PeopleList(list: List<ContactSuggestion>, parse: (String) -> MgNumber?, onChosen: (Recipient) -> Unit) {
     Column(verticalArrangement = Arrangement.spacedBy(Spacing.sm)) {
         list.forEach { s ->
-            val number = YasNumber.parse(s.phone) ?: return@forEach
+            val number = parse(s.phone) ?: return@forEach
             PersonRow(
                 name = s.name ?: number.pretty(),
-                number = if (s.name != null) number.pretty() else null,
+                number = when {
+                    !number.isYas -> "${number.pretty()} · ${number.operator.label}"
+                    s.name != null -> number.pretty()
+                    else -> null
+                },
                 onClick = { onChosen(Recipient(number, s.name)) },
             )
         }
@@ -213,12 +224,12 @@ private fun Initial(name: String) {
 
 // sans la permission : on explique et on propose quand meme le selecteur Android
 @Composable
-private fun ContactsPermissionCard(onAllowed: () -> Unit, onPicked: (Recipient) -> Unit) {
+private fun ContactsPermissionCard(onAllowed: () -> Unit, parse: (String) -> MgNumber?, onPicked: (Recipient) -> Unit) {
     val context = LocalContext.current
     val permission = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { onAllowed() }
     val picker = rememberLauncherForActivityResult(PickPhoneContact()) { uri ->
         val picked = uri?.let { readPickedContact(context, it) } ?: return@rememberLauncherForActivityResult
-        YasNumber.parse(picked.number)?.let { onPicked(Recipient(it, picked.name)) }
+        parse(picked.number)?.let { onPicked(Recipient(it, picked.name)) }
     }
     Surface(shape = MaterialTheme.shapes.medium, color = MaterialTheme.colorScheme.surfaceContainerHigh) {
         Column(Modifier.padding(Spacing.lg), verticalArrangement = Arrangement.spacedBy(Spacing.sm)) {

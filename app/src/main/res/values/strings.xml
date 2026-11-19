@@ -304,4 +304,9 @@
     <string name="ussd_number_hint">Tape les 7 chiffres après %1$s</string>
     <string name="ussd_number_unknown">Numéro pas dans tes contacts</string>
     <string name="ussd_back_to_contacts">Revenir aux contacts</string>
+    <!-- Envoi vers Orange / Airtel -->
+    <string name="ussd_error_mobile_number">Numéro invalide : 10 chiffres, commençant par 034, 038, 032, 033 ou 037</string>
+    <string name="ussd_number_other_operator">Numéro %1$s, pas dans tes contacts</string>
+    <string name="ussd_row_network">Réseau</string>
+    <string name="ussd_coupon_hint">Si Yas propose de créer un coupon, ce numéro n\'a pas de compte MVola : annule et vérifie le numéro.</string>
 </resources>

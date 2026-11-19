@@ -37,7 +37,8 @@ object MvolaUssd {
             ?.let { ready(it, NextOnPhone.INSTANT) }
             ?: refused(UssdError.NO_AIRTIME_CODE)
 
-        is UssdOperation.Send -> withNumber(op.number) { n -> send(n, op) }
+        // l'envoi marche aussi vers Orange et Airtel
+        is UssdOperation.Send -> MgNumber.parseAny(op.number)?.let { send(it, op) } ?: refused(UssdError.INVALID_MOBILE_NUMBER)
 
         is UssdOperation.WithdrawAtAgent -> withNumber(op.agentNumber) { n ->
             checkAmount(op.amount) ?: ready(code(MVOLA, "4", "1", n, op.amount), NextOnPhone.SECRET_CODE)
@@ -46,21 +47,23 @@ object MvolaUssd {
         UssdOperation.WithdrawAtAtm -> ready(code(MVOLA, "4", "2"), NextOnPhone.SECRET_CODE)
     }
 
-    // Envoi : numero, montant, frais de retrait (1 oui / 2 non), puis description
-    private fun send(n: YasNumber, op: UssdOperation.Send): UssdResult {
+    // Envoi vers Yas : numero, montant, frais de retrait (1 oui / 2 non), description.
+    // Vers Orange / Airtel : pas de question sur les frais de retrait (dit par l'utilisateur, 19/11/2026).
+    private fun send(n: MgNumber, op: UssdOperation.Send): UssdResult {
         checkAmount(op.amount)?.let { return it }
-        val fee = if (op.payRecipientFee) "1" else "2"
-        val desc = op.description?.trim().orEmpty()
-        if (desc.isEmpty()) {
-            return ready(code(MVOLA, "2", n, op.amount, fee), NextOnPhone.DESCRIPTION)
+        val steps = buildList<Any> {
+            add(MVOLA); add("2"); add(n); add(op.amount)
+            if (n.isYas) add(if (op.payRecipientFee) "1" else "2")
         }
+        val desc = op.description?.trim().orEmpty()
+        if (desc.isEmpty()) return ready(code(*steps.toTypedArray()), NextOnPhone.DESCRIPTION)
         if (!desc.all { it.isDigit() }) return refused(UssdError.DESCRIPTION_NOT_DIGITS)
         if (desc.length > MAX_DESCRIPTION) return refused(UssdError.DESCRIPTION_TOO_LONG)
-        return ready(code(MVOLA, "2", n, op.amount, fee, desc), NextOnPhone.SECRET_CODE)
+        return ready(code(*(steps + desc).toTypedArray()), NextOnPhone.SECRET_CODE)
     }
 
-    private inline fun withNumber(raw: String, next: (YasNumber) -> UssdResult): UssdResult {
-        val n = YasNumber.parse(raw) ?: return refused(UssdError.INVALID_NUMBER)
+    private inline fun withNumber(raw: String, next: (MgNumber) -> UssdResult): UssdResult {
+        val n = MgNumber.parse(raw) ?: return refused(UssdError.INVALID_NUMBER)
         return next(n)
     }
 

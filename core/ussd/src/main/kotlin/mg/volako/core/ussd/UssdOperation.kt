@@ -51,6 +51,7 @@ data class UssdRequest(val code: String, val next: NextOnPhone) {
 // Pourquoi on refuse de fabriquer le code (affiche a l'utilisateur)
 enum class UssdError {
     INVALID_NUMBER,          // pas un numero Yas 034 / 038
+    INVALID_MOBILE_NUMBER,   // pas un numero mobile malgache (envoi : Yas, Orange, Airtel)
     AMOUNT_TOO_SMALL,
     AMOUNT_TOO_BIG,
     DESCRIPTION_NOT_DIGITS,  // les lettres deviennent des chiffres sur le clavier (test -> 8378)

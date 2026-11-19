@@ -37,7 +37,8 @@ import mg.volako.R
 import mg.volako.core.designsystem.component.NumericKeypad
 import mg.volako.core.designsystem.theme.AmountTextStyle
 import mg.volako.core.designsystem.theme.Spacing
-import mg.volako.core.ussd.YasNumber
+import mg.volako.core.ussd.MgNumber
+import mg.volako.core.ussd.Operator
 import mg.volako.core.designsystem.R as DesignR
 
 // Taper un numero inconnu : on choisit le prefixe (034 deja choisi), puis on tape
@@ -48,12 +49,14 @@ fun NumberPad(
     names: Map<String, String>,
     onChosen: (Recipient) -> Unit,
     onBack: () -> Unit,
-    prefixes: List<String> = listOf("034", "038"),
+    // envoi d'argent : aussi Orange et Airtel
+    allowOtherOperators: Boolean = false,
 ) {
+    val prefixes = if (allowOtherOperators) Operator.entries.flatMap { it.prefixes } else Operator.YAS.prefixes
     var prefix by rememberSaveable { mutableStateOf(prefixes.first()) }
     // les 7 chiffres apres le prefixe
     var rest by rememberSaveable { mutableStateOf("") }
-    val number = YasNumber.parse(prefix + rest)
+    val number = if (allowOtherOperators) MgNumber.parseAny(prefix + rest) else MgNumber.parse(prefix + rest)
     val knownName = number?.let { names[it.digits] }
     val colors = MaterialTheme.colorScheme
 
@@ -87,6 +90,7 @@ fun NumberPad(
         Text(
             when {
                 knownName != null -> knownName
+                number != null && !number.isYas -> stringResource(R.string.ussd_number_other_operator, number.operator.label)
                 number != null -> stringResource(R.string.ussd_number_unknown)
                 else -> stringResource(R.string.ussd_number_hint, prefix)
             },
@@ -134,13 +138,13 @@ fun clipboardHasText(context: Context): Boolean {
     return d.hasMimeType(ClipDescription.MIMETYPE_TEXT_PLAIN) || d.hasMimeType(ClipDescription.MIMETYPE_TEXT_HTML)
 }
 
-// lu seulement quand l'utilisateur touche "Coller" ; null si ce n'est pas un numero Yas
-fun pastedYasNumber(context: Context): YasNumber? {
+// lu seulement quand l'utilisateur touche "Coller" ; null si on ne trouve pas de numero accepte
+fun pastedNumber(context: Context, allowOtherOperators: Boolean): MgNumber? {
     val cm = context.getSystemService(ClipboardManager::class.java) ?: return null
     val text = cm.primaryClip?.getItemAt(0)?.coerceToText(context)?.toString() ?: return null
     // on cherche un numero dans le texte copie ("Mon numero : 034 20 454 85 merci")
-    val match = Regex("(\\+?261|0)\\s*3[48](?:[\\s.-]*\\d){7}").find(text)?.value ?: text
-    return YasNumber.parse(match)
+    val match = Regex("(\\+?261|0)\\s*3[2-8](?:[\\s.-]*\\d){7}").find(text)?.value ?: text
+    return if (allowOtherOperators) MgNumber.parseAny(match) else MgNumber.parse(match)
 }
 
 // les deux raccourcis sous la recherche : taper un numero, coller un numero

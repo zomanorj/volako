@@ -101,6 +101,15 @@ class MvolaUssdTest {
     }
 
     @Test
+    fun `envoi vers Orange ou Airtel sans question de frais de retrait`() {
+        val orange = ready(UssdOperation.Send("032 12 345 67", 1_000, payRecipientFee = true, description = "5"))
+        assertEquals("#111*1*2*0321234567*1000*5#", orange.code)
+        val airtel = ready(UssdOperation.Send("0331234567", 1_000, payRecipientFee = false, description = null))
+        assertEquals("#111*1*2*0331234567*1000#", airtel.code)
+        assertEquals(NextOnPhone.DESCRIPTION, airtel.next)
+    }
+
+    @Test
     fun `retrait chez un agent`() {
         assertEquals("#111*1*4*1*0342802836*1000#", ready(UssdOperation.WithdrawAtAgent("0342802836", 1_000)).code)
     }
@@ -119,7 +128,8 @@ class MvolaUssdTest {
 
     @Test
     fun `numero pas Yas refuse`() {
-        assertEquals(UssdError.INVALID_NUMBER, error(UssdOperation.Send("0321234567", 100, false, "1")))
+        assertEquals(UssdError.INVALID_MOBILE_NUMBER, error(UssdOperation.Send("0391234567", 100, false, "1")))
+        assertEquals(UssdError.INVALID_NUMBER, error(UssdOperation.CreditForOther("0321234567", 100)))
         assertEquals(UssdError.INVALID_NUMBER, error(UssdOperation.CreditForOther("12345", 100)))
     }
 
