@@ -56,10 +56,13 @@ fun UssdConfirm(
 
         options()
 
-        when (request.next) {
-            NextOnPhone.SECRET_CODE -> SecretNote(stringResource(R.string.ussd_next_secret))
-            NextOnPhone.DESCRIPTION -> SecretNote(stringResource(R.string.ussd_next_description))
-            NextOnPhone.MENU, NextOnPhone.RESULT -> Unit
+        // le rappel n'a de sens que si on peut lancer (sinon il decrit un code qui ne partira pas)
+        if (launchEnabled) {
+            when (request.next) {
+                NextOnPhone.SECRET_CODE -> SecretNote(stringResource(R.string.ussd_next_secret))
+                NextOnPhone.DESCRIPTION -> SecretNote(stringResource(R.string.ussd_next_description))
+                NextOnPhone.MENU, NextOnPhone.RESULT -> Unit
+            }
         }
 
         Button(onClick = onLaunch, enabled = launchEnabled, modifier = Modifier.fillMaxWidth().height(56.dp)) {
