@@ -215,7 +215,7 @@
     <string name="ussd_fee_none">Aucun</string>
     <string name="ussd_op_credit_me">Crédit pour mon numéro</string>
     <string name="ussd_op_offer_me">Offre pour mon numéro</string>
-    <string name="ussd_next_secret">La fenêtre Yas va s\'ouvrir et te demander ton code secret. Vérifie le montant affiché par Yas avant de le taper.</string>
+    <string name="ussd_next_secret">La fenêtre Yas va s\'ouvrir et te demander ton code secret. Vérifie ce qu\'elle affiche avant de le taper.</string>
     <string name="ussd_low_balance">Ton solde MVola (%1$s) semble trop bas</string>
     <string name="ussd_low_balance_body">Tu peux quand même lancer : Yas refusera si le solde ne suffit pas.</string>
     <string name="ussd_error_number">Ce n\'est pas un numéro Yas (034 ou 038, 10 chiffres)</string>
