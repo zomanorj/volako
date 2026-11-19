@@ -25,9 +25,17 @@ object MvolaUssd {
         }
 
         is UssdOperation.OfferForMe ->
-            ready(code(OFFER_MENU, *op.offer.menuPath.toTypedArray()), NextOnPhone.SECRET_CODE)
+            ready(code(OFFER_MENU, *op.offer.selfPath.toTypedArray()), NextOnPhone.SECRET_CODE)
 
-        UssdOperation.OfferForOther -> ready(code(MVOLA, "1", "4"), NextOnPhone.MENU)
+        // ATTENTION : en tout-en-un c'est *5 (pas *4 comme dans le menu affiche).
+        // Avec *4, Yas ignore le numero et achete l'offre pour soi (teste le 19/11/2026).
+        is UssdOperation.OfferForOther -> withNumber(op.number) { n ->
+            ready(code(MVOLA, "1", "5", n, *op.offer.otherPath.toTypedArray()), NextOnPhone.SECRET_CODE)
+        }
+
+        is UssdOperation.OfferWithAirtime -> op.offer.airtimeCode
+            ?.let { ready(it, NextOnPhone.INSTANT) }
+            ?: refused(UssdError.NO_AIRTIME_CODE)
 
         is UssdOperation.Send -> withNumber(op.number) { n -> send(n, op) }
 

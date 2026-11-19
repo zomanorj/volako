@@ -193,7 +193,7 @@
     <string name="mvola_credit">Crédit</string>
     <string name="mvola_credit_sub">Pour moi ou un autre</string>
     <string name="mvola_offer">Offre</string>
-    <string name="mvola_offer_sub">M\'Ora, First, Ye\'low, Net</string>
+    <string name="mvola_offer_sub">Pour moi ou un autre</string>
     <string name="mvola_credit_balance">Solde crédit</string>
     <string name="mvola_credit_balance_sub">Gratuit · #357#</string>
     <string name="mvola_secret_note">Ton code secret se tape seulement dans la fenêtre Yas. Volako ne le voit jamais et ne l\'enregistre pas.</string>
@@ -223,6 +223,7 @@
     <string name="ussd_error_big">Maximum %1$s</string>
     <string name="ussd_error_desc_digits">Description en chiffres seulement</string>
     <string name="ussd_error_desc_long">Description trop longue</string>
+    <string name="ussd_error_no_airtime">Pas de code connu pour payer cette offre avec le crédit</string>
     <string name="ussd_no_phone">Impossible d\'ouvrir le téléphone sur cet appareil</string>
     <string name="mvola_send">Envoyer de l\'argent</string>
     <string name="mvola_send_sub">Vers un numéro Yas</string>
@@ -278,4 +279,13 @@
     <string name="shortcut_withdraw_long">Retirer de l\'argent</string>
     <string name="shortcut_credit_short">Crédit</string>
     <string name="shortcut_credit_long">Acheter du crédit</string>
+    <!-- Offres : pour un autre, payees avec le credit -->
+    <string name="ussd_op_offer_other">Offre pour un autre numéro</string>
+    <string name="ussd_offer_other_title">Offre pour un autre numéro</string>
+    <string name="ussd_pay_with">Payer avec</string>
+    <string name="ussd_pay_airtime">Crédit téléphone</string>
+    <string name="ussd_paid_airtime">Payée avec le crédit</string>
+    <string name="ussd_instant_title">Achat immédiat, sans code secret</string>
+    <string name="ussd_instant_body">Le code #322 achète l\'offre dès que tu touches Lancer, avec ton crédit téléphone. Vérifie bien l\'offre.</string>
+    <string name="ussd_resume_hint">Si Yas demande de reprendre la session précédente, réponds 2 (Non).</string>
 </resources>

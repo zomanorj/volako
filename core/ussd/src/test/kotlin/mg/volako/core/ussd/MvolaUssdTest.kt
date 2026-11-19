@@ -46,10 +46,29 @@ class MvolaUssdTest {
     }
 
     @Test
-    fun `offre pour un autre ouvre seulement le menu`() {
-        val r = ready(UssdOperation.OfferForOther)
-        assertEquals("#111*1*1*4#", r.code)
-        assertEquals(NextOnPhone.MENU, r.next)
+    fun `offre pour un autre utilise le choix 5 et le menu des autres`() {
+        // *5 en tout-en-un (avec *4, Yas achete pour soi !), et Ye'low 200 est le choix 6 ici
+        val y200 = YasOffers.byId("yelow_200")!!
+        val r = ready(UssdOperation.OfferForOther("034 20 454 85", y200))
+        assertEquals("#111*1*1*5*0342045485*3*6#", r.code)
+        assertEquals(NextOnPhone.SECRET_CODE, r.next)
+        val net200k = YasOffers.byId("net_month_200000")!!
+        assertEquals("#111*1*1*5*0342045485*4*2*0*6#", ready(UssdOperation.OfferForOther("0342045485", net200k)).code)
+        // et pour moi, la meme offre est ailleurs
+        assertEquals("#111*1*1*3*3*0*6#", ready(UssdOperation.OfferForMe(y200)).code)
+    }
+
+    @Test
+    fun `offre pour un autre refuse un numero pas Yas`() {
+        assertEquals(UssdError.INVALID_NUMBER, error(UssdOperation.OfferForOther("0321234567", YasOffers.all.first())))
+    }
+
+    @Test
+    fun `offre avec le credit telephonique`() {
+        val r = ready(UssdOperation.OfferWithAirtime(YasOffers.byId("yelow_100")!!))
+        assertEquals("#322*67#", r.code)
+        assertEquals(NextOnPhone.INSTANT, r.next)
+        assertEquals(UssdError.NO_AIRTIME_CODE, error(UssdOperation.OfferWithAirtime(YasOffers.byId("yelow_up")!!)))
     }
 
     @Test
@@ -112,11 +131,12 @@ class MvolaUssdTest {
     @Test
     fun `aucun code ne contient de lettre`() {
         // garde-fou : un code compose ne doit avoir que des chiffres, * et #
-        val ops = YasOffers.all.map { UssdOperation.OfferForMe(it) } + listOf(
+        val ops = YasOffers.all.flatMap {
+            listOf(UssdOperation.OfferForMe(it), UssdOperation.OfferForOther("0342045485", it))
+        } + YasOffers.all.filter { it.airtimeCode != null }.map { UssdOperation.OfferWithAirtime(it) } + listOf(
             UssdOperation.CreditBalance,
             UssdOperation.CreditForMe(500),
             UssdOperation.WithdrawAtAtm,
-            UssdOperation.OfferForOther,
         )
         ops.forEach { assertTrue(ready(it).code.matches(Regex("#[0-9*]+#"))) }
     }

@@ -14,8 +14,13 @@ class YasOffersTest {
 
     @Test
     fun `deux offres ne tombent jamais sur le meme choix du menu`() {
-        val paths = YasOffers.all.map { it.menuPath }
-        assertEquals(paths.size, paths.toSet().size)
+        // dans chacun des deux menus (pour moi / pour un autre)
+        val self = YasOffers.all.map { it.selfPath }
+        assertEquals(self.size, self.toSet().size)
+        val other = YasOffers.all.map { it.otherPath }
+        assertEquals(other.size, other.toSet().size)
+        val airtime = YasOffers.all.mapNotNull { it.airtimeCode }
+        assertEquals(airtime.size, airtime.toSet().size)
     }
 
     @Test

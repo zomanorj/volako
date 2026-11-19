@@ -63,7 +63,7 @@ object FavoriteShortcuts {
 
     // court (environ 10 caracteres conseilles par la doc) : la personne ou l'offre
     private fun Favorite.shortLabel(context: Context): String = when (kind) {
-        FavoriteKind.OFFER_ME -> offerName() ?: context.getString(R.string.fav_section)
+        FavoriteKind.OFFER_ME, FavoriteKind.OFFER_AIRTIME -> offerName() ?: context.getString(R.string.fav_section)
         FavoriteKind.CREDIT_ME -> context.getString(R.string.shortcut_credit_short)
         else -> name ?: phone ?: context.getString(R.string.fav_section)
     }
@@ -75,7 +75,8 @@ object FavoriteShortcuts {
             FavoriteKind.SEND -> context.getString(R.string.fav_send, a)
             FavoriteKind.CREDIT_ME, FavoriteKind.CREDIT_OTHER -> context.getString(R.string.fav_credit_me, a)
             FavoriteKind.WITHDRAW_AGENT -> context.getString(R.string.fav_withdraw, a)
-            FavoriteKind.OFFER_ME -> return offerName() ?: context.getString(R.string.fav_section)
+            FavoriteKind.OFFER_ME, FavoriteKind.OFFER_AIRTIME -> return offerName() ?: context.getString(R.string.fav_section)
+            FavoriteKind.OFFER_OTHER -> offerName() ?: context.getString(R.string.fav_section)
         }
         val who = name ?: phone
         return (if (who != null && kind != FavoriteKind.CREDIT_ME) "$action · $who" else action).take(25)

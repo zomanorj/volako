@@ -15,6 +15,8 @@ fun Favorite.toOperation(): UssdOperation? = when (kind) {
     FavoriteKind.CREDIT_OTHER -> UssdOperation.CreditForOther(phone.orEmpty(), amount ?: 0)
     FavoriteKind.WITHDRAW_AGENT -> UssdOperation.WithdrawAtAgent(phone.orEmpty(), amount ?: 0)
     FavoriteKind.OFFER_ME -> offerId?.let(YasOffers::byId)?.let { UssdOperation.OfferForMe(it) }
+    FavoriteKind.OFFER_OTHER -> offerId?.let(YasOffers::byId)?.let { UssdOperation.OfferForOther(phone.orEmpty(), it) }
+    FavoriteKind.OFFER_AIRTIME -> offerId?.let(YasOffers::byId)?.let { UssdOperation.OfferWithAirtime(it) }
 }
 
 // fabrique le favori a partir de ce que l'utilisateur vient de preparer
@@ -33,8 +35,12 @@ fun favoriteOf(op: UssdOperation, name: String? = null): Favorite? {
             kind = FavoriteKind.WITHDRAW_AGENT, amount = op.amount, phone = op.agentNumber, name = name, createdAt = now,
         )
         is UssdOperation.OfferForMe -> Favorite(kind = FavoriteKind.OFFER_ME, offerId = op.offer.id, createdAt = now)
+        is UssdOperation.OfferForOther -> Favorite(
+            kind = FavoriteKind.OFFER_OTHER, offerId = op.offer.id, phone = op.number, name = name, createdAt = now,
+        )
+        is UssdOperation.OfferWithAirtime -> Favorite(kind = FavoriteKind.OFFER_AIRTIME, offerId = op.offer.id, createdAt = now)
         // rien a retenir : pas de montant ni de numero
-        UssdOperation.CreditBalance, UssdOperation.OfferForOther, UssdOperation.WithdrawAtAtm -> null
+        UssdOperation.CreditBalance, UssdOperation.WithdrawAtAtm -> null
     }
 }
 

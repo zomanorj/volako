@@ -9,6 +9,8 @@ enum class FavoriteKind {
     CREDIT_OTHER,   // credit pour un autre numero
     WITHDRAW_AGENT, // retrait chez un agent
     OFFER_ME,       // offre pour mon numero
+    OFFER_OTHER,    // offre pour un autre numero
+    OFFER_AIRTIME,  // offre pour mon numero payee avec le credit (#322)
 }
 
 // Une operation MVola enregistree pour la refaire en un appui (le code secret n'est JAMAIS garde)

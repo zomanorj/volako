@@ -27,6 +27,8 @@ class FavoriteMappingTest {
             UssdOperation.CreditForOther("0342045485", 500),
             UssdOperation.WithdrawAtAgent("0342802836", 20_000),
             UssdOperation.OfferForMe(YasOffers.byId("net_week_3000")!!),
+            UssdOperation.OfferForOther("0342045485", YasOffers.byId("yelow_200")!!),
+            UssdOperation.OfferWithAirtime(YasOffers.byId("yelow_100")!!),
         )
         ops.forEach { op ->
             val fav = favoriteOf(op, name = "Elyse")!!
@@ -35,10 +37,9 @@ class FavoriteMappingTest {
     }
 
     @Test
-    fun `rien a retenir pour le solde, le DAB ou l'offre pour un autre`() {
+    fun `rien a retenir pour le solde ou le DAB`() {
         assertNull(favoriteOf(UssdOperation.CreditBalance))
         assertNull(favoriteOf(UssdOperation.WithdrawAtAtm))
-        assertNull(favoriteOf(UssdOperation.OfferForOther))
     }
 
     @Test

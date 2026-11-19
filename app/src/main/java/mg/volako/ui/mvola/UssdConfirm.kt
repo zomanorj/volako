@@ -26,6 +26,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import mg.volako.R
+import mg.volako.core.designsystem.component.AlertBanner
 import mg.volako.core.designsystem.component.LabelValueRow
 import mg.volako.core.designsystem.component.formatAriary
 import mg.volako.core.designsystem.theme.Sizes
@@ -72,7 +73,21 @@ fun UssdConfirm(
             when (request.next) {
                 NextOnPhone.SECRET_CODE -> SecretNote(stringResource(R.string.ussd_next_secret))
                 NextOnPhone.DESCRIPTION -> SecretNote(stringResource(R.string.ussd_next_description))
-                NextOnPhone.MENU, NextOnPhone.RESULT -> Unit
+                // #322 : pas de code secret pour se rattraper, on previent clairement
+                NextOnPhone.INSTANT -> AlertBanner(
+                    icon = DesignR.drawable.ic_report,
+                    title = stringResource(R.string.ussd_instant_title),
+                    body = stringResource(R.string.ussd_instant_body),
+                )
+                NextOnPhone.RESULT -> Unit
+            }
+            // vu en vrai : apres une session annulee, Yas demande s'il faut la reprendre
+            if (request.next == NextOnPhone.SECRET_CODE || request.next == NextOnPhone.DESCRIPTION) {
+                Text(
+                    stringResource(R.string.ussd_resume_hint),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
             }
         }
 
@@ -127,4 +142,5 @@ fun ussdErrorText(error: UssdError): String = when (error) {
     UssdError.AMOUNT_TOO_BIG -> stringResource(R.string.ussd_error_big, formatAriary(MvolaUssd.MAX_AMOUNT))
     UssdError.DESCRIPTION_NOT_DIGITS -> stringResource(R.string.ussd_error_desc_digits)
     UssdError.DESCRIPTION_TOO_LONG -> stringResource(R.string.ussd_error_desc_long)
+    UssdError.NO_AIRTIME_CODE -> stringResource(R.string.ussd_error_no_airtime)
 }

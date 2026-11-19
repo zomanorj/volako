@@ -161,7 +161,7 @@ fun MvolaScreen(
         MvolaSheet.SEND -> SendSheet(mvolaBalance, state.people, launchAndClose, viewModel::addFavorite, onDismiss = { sheet = null })
         MvolaSheet.WITHDRAW -> WithdrawSheet(mvolaBalance, state.agents, launchAndClose, viewModel::addFavorite, onDismiss = { sheet = null })
         MvolaSheet.CREDIT -> CreditSheet(mvolaBalance, state.creditTargets, launchAndClose, viewModel::addFavorite, onDismiss = { sheet = null })
-        MvolaSheet.OFFER -> OfferSheet(mvolaBalance, launchAndClose, viewModel::addFavorite, onDismiss = { sheet = null })
+        MvolaSheet.OFFER -> OfferSheet(mvolaBalance, state.creditTargets, launchAndClose, viewModel::addFavorite, onDismiss = { sheet = null })
         null -> Unit
     }
 

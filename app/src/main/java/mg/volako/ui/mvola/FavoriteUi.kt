@@ -44,7 +44,7 @@ private fun Favorite.icon(): Int = when (kind) {
     FavoriteKind.SEND -> DesignR.drawable.ic_send_money
     FavoriteKind.CREDIT_ME, FavoriteKind.CREDIT_OTHER -> DesignR.drawable.ic_sim_card
     FavoriteKind.WITHDRAW_AGENT -> DesignR.drawable.ic_local_atm
-    FavoriteKind.OFFER_ME -> DesignR.drawable.ic_signal_cellular_alt
+    FavoriteKind.OFFER_ME, FavoriteKind.OFFER_OTHER, FavoriteKind.OFFER_AIRTIME -> DesignR.drawable.ic_signal_cellular_alt
 }
 
 // "Envoyer 50 000 Ar"
@@ -56,7 +56,8 @@ fun Favorite.title(): String {
         FavoriteKind.CREDIT_ME -> stringResource(R.string.fav_credit_me, a)
         FavoriteKind.CREDIT_OTHER -> stringResource(R.string.fav_credit_other, a)
         FavoriteKind.WITHDRAW_AGENT -> stringResource(R.string.fav_withdraw, a)
-        FavoriteKind.OFFER_ME -> stringResource(R.string.fav_offer, offerId?.let(YasOffers::byId)?.name ?: offerId.orEmpty())
+        FavoriteKind.OFFER_ME, FavoriteKind.OFFER_OTHER, FavoriteKind.OFFER_AIRTIME ->
+            stringResource(R.string.fav_offer, offerId?.let(YasOffers::byId)?.name ?: offerId.orEmpty())
     }
 }
 
@@ -68,6 +69,8 @@ fun Favorite.subtitle(): String {
         number != null -> name?.let { "$it · ${number.pretty()}" } ?: number.pretty()
         kind == FavoriteKind.OFFER_ME -> offerId?.let(YasOffers::byId)?.let { "${formatAriary(it.price)} · ${stringResource(R.string.fav_for_me)}" }
             ?: stringResource(R.string.fav_for_me)
+        kind == FavoriteKind.OFFER_AIRTIME -> offerId?.let(YasOffers::byId)?.let { "${formatAriary(it.price)} · ${stringResource(R.string.ussd_paid_airtime)}" }
+            ?: stringResource(R.string.ussd_paid_airtime)
         else -> stringResource(R.string.fav_for_me)
     }
 }
@@ -188,14 +191,17 @@ private fun favoriteRows(f: Favorite): List<Pair<String, String>> = buildList {
             add(stringResource(R.string.ussd_row_agent) to f.subtitle())
             add(stringResource(R.string.ussd_row_amount) to formatAriary(f.amount ?: 0))
         }
-        FavoriteKind.OFFER_ME -> {
+        FavoriteKind.OFFER_ME, FavoriteKind.OFFER_OTHER, FavoriteKind.OFFER_AIRTIME -> {
             val offer = f.offerId?.let(YasOffers::byId)
-            add(op to stringResource(R.string.ussd_op_offer_me))
+            add(op to stringResource(if (f.kind == FavoriteKind.OFFER_OTHER) R.string.ussd_op_offer_other else R.string.ussd_op_offer_me))
+            if (f.kind == FavoriteKind.OFFER_OTHER) add(stringResource(R.string.ussd_row_to) to f.subtitle())
             add(stringResource(R.string.ussd_row_offer) to (offer?.name ?: f.offerId.orEmpty()))
             offer?.let {
                 add(stringResource(R.string.ussd_row_content) to it.content)
                 add(stringResource(R.string.ussd_row_price) to formatAriary(it.price))
             }
+            add(stringResource(R.string.ussd_row_paid_with) to stringResource(if (f.kind == FavoriteKind.OFFER_AIRTIME) R.string.ussd_pay_airtime else R.string.mvola_title))
+            if (f.kind == FavoriteKind.OFFER_OTHER) add(stringResource(R.string.ussd_row_fee) to formatAriary(MvolaUssd.OTHER_NUMBER_FEE))
         }
     }
 }

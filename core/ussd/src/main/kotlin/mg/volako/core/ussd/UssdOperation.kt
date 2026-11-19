@@ -13,9 +13,11 @@ sealed interface UssdOperation {
 
     data class OfferForMe(val offer: YasOffer) : UssdOperation
 
-    // Pas de code tout-en-un : le menu Yas ne montre pas le beneficiaire avant le code secret.
-    // On ouvre seulement le menu, l'utilisateur continue dans la bulle Yas.
-    data object OfferForOther : UssdOperation
+    // Yas affiche "pour le 034..." avant le code secret : on peut verifier le beneficiaire
+    data class OfferForOther(val number: String, val offer: YasOffer) : UssdOperation
+
+    // Offre payee avec le credit telephonique (#322*..#) : achat IMMEDIAT, sans code secret
+    data class OfferWithAirtime(val offer: YasOffer) : UssdOperation
 
     // description = null : Yas demandera la description, l'utilisateur la tape avec des lettres
     data class Send(
@@ -35,8 +37,8 @@ sealed interface UssdOperation {
 enum class NextOnPhone {
     SECRET_CODE, // Yas demande directement le code secret
     DESCRIPTION, // Yas demande la description du transfert
-    MENU,        // l'utilisateur continue dans le menu Yas
     RESULT,      // Yas affiche juste une information
+    INSTANT,     // achat fait tout de suite, sans code secret (offre payee avec le credit)
 }
 
 // Un code pret a etre compose
@@ -53,6 +55,7 @@ enum class UssdError {
     AMOUNT_TOO_BIG,
     DESCRIPTION_NOT_DIGITS,  // les lettres deviennent des chiffres sur le clavier (test -> 8378)
     DESCRIPTION_TOO_LONG,
+    NO_AIRTIME_CODE,         // on ne connait pas de code #322 pour cette offre
 }
 
 sealed interface UssdResult {
