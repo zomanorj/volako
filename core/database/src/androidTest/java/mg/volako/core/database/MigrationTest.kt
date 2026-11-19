@@ -75,4 +75,32 @@ class MigrationTest {
                 "VALUES ('achat#offre', 3, 0, 'CREDIT_PURCHASE', 0)",
         )
     }
+
+    @Test
+    fun migration_3_vers_4_garde_tout_et_ajoute_les_favoris() {
+        helper.createDatabase(dbName, 3).use { db ->
+            db.execSQL(
+                """
+                INSERT INTO transactions (type, amount, fee, account, to_account, category, label,
+                    counterparty_name, counterparty_phone, occurred_at, source, sms_reference, sms_balance, read_by)
+                VALUES ('EXPENSE', 500, 0, 'MVOLA', NULL, 'credit', 'Credit YAS', NULL, NULL, 0, 'SMS', '123', 388, 'EXACT')
+                """.trimIndent(),
+            )
+        }
+        val db = helper.runMigrationsAndValidate(dbName, 4, true)
+
+        db.query("SELECT COUNT(*) FROM transactions").use { c ->
+            c.moveToFirst()
+            assertEquals(1, c.getInt(0))
+        }
+        // la nouvelle table des favoris marche
+        db.execSQL(
+            "INSERT INTO ussd_favorites (kind, amount, phone, name, offer_id, pay_recipient_fee, description, created_at) " +
+                "VALUES ('SEND', 50000, '0342045485', 'Elyse', NULL, 0, NULL, 0)",
+        )
+        db.query("SELECT amount FROM ussd_favorites").use { c ->
+            c.moveToFirst()
+            assertEquals(50000, c.getInt(0))
+        }
+    }
 }

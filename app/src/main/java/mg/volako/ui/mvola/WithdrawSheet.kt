@@ -26,6 +26,7 @@ import mg.volako.R
 import mg.volako.core.designsystem.component.formatAriary
 import mg.volako.core.designsystem.theme.Spacing
 import mg.volako.core.domain.RecentContact
+import mg.volako.core.model.Favorite
 import mg.volako.core.ussd.MvolaUssd
 import mg.volako.core.ussd.UssdOperation
 import mg.volako.core.ussd.UssdRequest
@@ -39,6 +40,7 @@ fun WithdrawSheet(
     mvolaBalance: Long,
     agents: List<RecentContact>,
     onLaunch: (UssdRequest) -> Unit,
+    onSaveFavorite: (Favorite) -> Unit,
     onDismiss: () -> Unit,
 ) {
     var atAtm by rememberSaveable { mutableStateOf(false) }
@@ -49,9 +51,8 @@ fun WithdrawSheet(
 
     val amount = digits.toLongOrNull() ?: 0L
     val agent = agentNumber?.let(YasNumber::parse)?.let { Recipient(it, agentName) }
-    val result = MvolaUssd.build(
-        if (atAtm) UssdOperation.WithdrawAtAtm else UssdOperation.WithdrawAtAgent(agent?.number?.digits.orEmpty(), amount),
-    )
+    val operation = if (atAtm) UssdOperation.WithdrawAtAtm else UssdOperation.WithdrawAtAgent(agent?.number?.digits.orEmpty(), amount)
+    val result = MvolaUssd.build(operation)
     val where = @Composable { Where(atAtm, onChange = { atAtm = it }) }
 
     ModalBottomSheet(
@@ -91,6 +92,7 @@ fun WithdrawSheet(
                     request = result.request,
                     onLaunch = { onLaunch(result.request) },
                     onEdit = { confirming = false },
+                    onSaveFavorite = { favoriteOf(operation, agent.name)?.let(onSaveFavorite) },
                 )
 
                 agent == null -> RecipientStep(

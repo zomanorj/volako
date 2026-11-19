@@ -11,10 +11,15 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
@@ -41,7 +46,13 @@ fun UssdConfirm(
     launchEnabled: Boolean = true,
     // reglages modifiables juste avant de lancer (ex : frais de retrait, description)
     options: @Composable () -> Unit = {},
+    // null = pas de bouton favori (ex : on regarde deja un favori)
+    onSaveFavorite: (() -> Unit)? = null,
+    editLabel: String = stringResource(R.string.ussd_edit),
+    footer: @Composable () -> Unit = {},
 ) {
+    // le code change (montant, description...) : le bouton favori redevient actif
+    var saved by rememberSaveable(request.code) { mutableStateOf(false) }
     Column(verticalArrangement = Arrangement.spacedBy(Spacing.lg)) {
         Text(stringResource(R.string.ussd_confirm_title), style = MaterialTheme.typography.titleLarge)
 
@@ -69,7 +80,28 @@ fun UssdConfirm(
             Icon(painterResource(DesignR.drawable.ic_dialpad), null, Modifier.size(20.dp))
             Text(stringResource(R.string.ussd_launch), Modifier.padding(start = Spacing.sm))
         }
-        TextButton(onClick = onEdit, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.ussd_edit)) }
+        if (onSaveFavorite != null) {
+            OutlinedButton(
+                onClick = {
+                    onSaveFavorite()
+                    saved = true
+                },
+                enabled = launchEnabled && !saved,
+                modifier = Modifier.fillMaxWidth().height(48.dp),
+            ) {
+                Icon(
+                    painterResource(if (saved) DesignR.drawable.ic_bookmark_added else DesignR.drawable.ic_star),
+                    null,
+                    Modifier.size(18.dp),
+                )
+                Text(
+                    stringResource(if (saved) R.string.fav_saved else R.string.fav_add),
+                    Modifier.padding(start = Spacing.sm),
+                )
+            }
+        }
+        TextButton(onClick = onEdit, modifier = Modifier.fillMaxWidth()) { Text(editLabel) }
+        footer()
     }
 }
 

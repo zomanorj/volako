@@ -31,6 +31,7 @@ import mg.volako.R
 import mg.volako.core.designsystem.component.formatAriary
 import mg.volako.core.designsystem.theme.Spacing
 import mg.volako.core.domain.RecentContact
+import mg.volako.core.model.Favorite
 import mg.volako.core.ussd.MvolaUssd
 import mg.volako.core.ussd.UssdOperation
 import mg.volako.core.ussd.UssdRequest
@@ -44,6 +45,7 @@ fun SendSheet(
     mvolaBalance: Long,
     recents: List<RecentContact>,
     onLaunch: (UssdRequest) -> Unit,
+    onSaveFavorite: (Favorite) -> Unit,
     onDismiss: () -> Unit,
 ) {
     var number by rememberSaveable { mutableStateOf<String?>(null) }
@@ -55,9 +57,8 @@ fun SendSheet(
 
     val amount = digits.toLongOrNull() ?: 0L
     val recipient = number?.let(YasNumber::parse)?.let { Recipient(it, name) }
-    val result = MvolaUssd.build(
-        UssdOperation.Send(recipient?.number?.digits.orEmpty(), amount, payRecipientFee = payFee, description = description),
-    )
+    val operation = UssdOperation.Send(recipient?.number?.digits.orEmpty(), amount, payRecipientFee = payFee, description = description)
+    val result = MvolaUssd.build(operation)
 
     ModalBottomSheet(
         onDismissRequest = onDismiss,
@@ -97,6 +98,7 @@ fun SendSheet(
                         launchEnabled = result is UssdResult.Ready,
                         onLaunch = { (result as? UssdResult.Ready)?.let { onLaunch(it.request) } },
                         onEdit = { confirming = false },
+                        onSaveFavorite = { favoriteOf(operation, recipient.name)?.let(onSaveFavorite) },
                         options = {
                             SendOptions(
                                 payFee = payFee,

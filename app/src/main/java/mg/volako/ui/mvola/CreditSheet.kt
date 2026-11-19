@@ -25,6 +25,7 @@ import mg.volako.R
 import mg.volako.core.designsystem.component.formatAriary
 import mg.volako.core.designsystem.theme.Spacing
 import mg.volako.core.domain.RecentContact
+import mg.volako.core.model.Favorite
 import mg.volako.core.ussd.MvolaUssd
 import mg.volako.core.ussd.UssdOperation
 import mg.volako.core.ussd.UssdRequest
@@ -38,6 +39,7 @@ fun CreditSheet(
     mvolaBalance: Long,
     recents: List<RecentContact>,
     onLaunch: (UssdRequest) -> Unit,
+    onSaveFavorite: (Favorite) -> Unit,
     onDismiss: () -> Unit,
 ) {
     var forOther by rememberSaveable { mutableStateOf(false) }
@@ -49,9 +51,9 @@ fun CreditSheet(
 
     val amount = digits.toLongOrNull() ?: 0L
     val recipient = otherNumber?.let(YasNumber::parse)?.let { Recipient(it, otherName) }
-    val result = MvolaUssd.build(
-        if (forOther) UssdOperation.CreditForOther(recipient?.number?.digits.orEmpty(), amount) else UssdOperation.CreditForMe(amount),
-    )
+    val operation =
+        if (forOther) UssdOperation.CreditForOther(recipient?.number?.digits.orEmpty(), amount) else UssdOperation.CreditForMe(amount)
+    val result = MvolaUssd.build(operation)
 
     ModalBottomSheet(
         onDismissRequest = onDismiss,
@@ -72,11 +74,12 @@ fun CreditSheet(
                         if (recipient != null && forOther) add(stringResource(R.string.ussd_row_to) to recipient.label())
                         add(stringResource(R.string.ussd_row_amount) to formatAriary(amount))
                         add(stringResource(R.string.ussd_row_paid_with) to stringResource(R.string.mvola_title))
-                        add(stringResource(R.string.ussd_row_fee) to if (forOther) formatAriary(OTHER_NUMBER_FEE) else stringResource(R.string.ussd_fee_none))
+                        add(stringResource(R.string.ussd_row_fee) to if (forOther) formatAriary(MvolaUssd.OTHER_NUMBER_FEE) else stringResource(R.string.ussd_fee_none))
                     },
                     request = result.request,
                     onLaunch = { onLaunch(result.request) },
                     onEdit = { confirming = false },
+                    onSaveFavorite = { favoriteOf(operation, recipient?.name)?.let(onSaveFavorite) },
                 )
 
                 forOther && recipient == null -> RecipientStep(
@@ -95,7 +98,7 @@ fun CreditSheet(
                     onDigitsChange = { digits = it },
                     error = (result as? UssdResult.Refused)?.error,
                     // pour un autre numero, Yas ajoute 150 Ar de frais
-                    mvolaBalance = if (forOther) mvolaBalance - OTHER_NUMBER_FEE else mvolaBalance,
+                    mvolaBalance = if (forOther) mvolaBalance - MvolaUssd.OTHER_NUMBER_FEE else mvolaBalance,
                     quickAmounts = QUICK_AMOUNTS,
                     onContinue = { confirming = true },
                     header = {
@@ -126,7 +129,5 @@ private fun ForWhom(forOther: Boolean, onChange: (Boolean) -> Unit) {
     }
 }
 
-// frais Yas pour un achat vers un autre numero (mvola.mg, quel que soit le montant)
-private const val OTHER_NUMBER_FEE = 150L
 
 private val QUICK_AMOUNTS = listOf(500L, 1_000L, 2_000L, 5_000L)

@@ -60,9 +60,11 @@ fun MvolaScreen(
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val launch = rememberUssdLauncher()
     var sheet by rememberSaveable { mutableStateOf<MvolaSheet?>(null) }
+    var openFavoriteId by rememberSaveable { mutableStateOf<Long?>(null) }
 
     val launchAndClose = { request: UssdRequest ->
         sheet = null
+        openFavoriteId = null
         launch(request)
     }
 
@@ -82,6 +84,11 @@ fun MvolaScreen(
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
+        }
+
+        if (state.favorites.isNotEmpty()) {
+            SectionHeader(stringResource(R.string.fav_section))
+            FavoritesList(state.favorites, onOpen = { openFavoriteId = it.id })
         }
 
         SectionHeader(stringResource(R.string.mvola_section_money))
@@ -136,11 +143,24 @@ fun MvolaScreen(
     }
 
     when (sheet) {
-        MvolaSheet.SEND -> SendSheet(mvolaBalance, state.people, onLaunch = launchAndClose, onDismiss = { sheet = null })
-        MvolaSheet.WITHDRAW -> WithdrawSheet(mvolaBalance, state.agents, onLaunch = launchAndClose, onDismiss = { sheet = null })
-        MvolaSheet.CREDIT -> CreditSheet(mvolaBalance, state.creditTargets, onLaunch = launchAndClose, onDismiss = { sheet = null })
-        MvolaSheet.OFFER -> OfferSheet(mvolaBalance, onLaunch = launchAndClose, onDismiss = { sheet = null })
+        MvolaSheet.SEND -> SendSheet(mvolaBalance, state.people, launchAndClose, viewModel::addFavorite, onDismiss = { sheet = null })
+        MvolaSheet.WITHDRAW -> WithdrawSheet(mvolaBalance, state.agents, launchAndClose, viewModel::addFavorite, onDismiss = { sheet = null })
+        MvolaSheet.CREDIT -> CreditSheet(mvolaBalance, state.creditTargets, launchAndClose, viewModel::addFavorite, onDismiss = { sheet = null })
+        MvolaSheet.OFFER -> OfferSheet(mvolaBalance, launchAndClose, viewModel::addFavorite, onDismiss = { sheet = null })
         null -> Unit
+    }
+
+    // on retrouve le favori par son id (il peut avoir ete supprime entre temps)
+    state.favorites.firstOrNull { it.id == openFavoriteId }?.let { fav ->
+        FavoriteSheet(
+            favorite = fav,
+            onLaunch = launchAndClose,
+            onDelete = {
+                viewModel.deleteFavorite(fav.id)
+                openFavoriteId = null
+            },
+            onDismiss = { openFavoriteId = null },
+        )
     }
 }
 

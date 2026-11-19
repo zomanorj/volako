@@ -3,6 +3,7 @@ package mg.volako
 import android.content.Context
 import mg.volako.core.data.CsvFileExporter
 import mg.volako.core.data.DataModule
+import mg.volako.core.data.FavoriteRepository
 import mg.volako.core.data.SmsImporter
 import mg.volako.core.data.TransactionRepository
 import mg.volako.core.data.UserPreferences
@@ -15,6 +16,8 @@ class AppContainer(context: Context) {
     val transactionRepository: TransactionRepository by lazy {
         DataModule.createTransactionRepository(context)
     }
+
+    val favoriteRepository: FavoriteRepository by lazy { DataModule.createFavoriteRepository(context) }
 
     val csvExporter by lazy { CsvFileExporter(context, transactionRepository) }
 

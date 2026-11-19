@@ -8,6 +8,8 @@ object MvolaUssd {
     const val MIN_AMOUNT = 100L          // plus petit montant teste
     const val MAX_AMOUNT = 20_000_000L   // plafond MVola par operation (mvola.mg)
     const val MAX_DESCRIPTION = 20
+    // frais Yas pour un credit ou une offre vers un autre numero (mvola.mg, quel que soit le montant)
+    const val OTHER_NUMBER_FEE = 150L
 
     private const val MVOLA = "111*1"
     private const val OFFER_MENU = "$MVOLA*1*3"

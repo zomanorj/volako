@@ -258,4 +258,17 @@
     <string name="ussd_row_how">Comment</string>
     <string name="ussd_fee_from_balance">Prélevés sur ton solde MVola</string>
     <string name="ussd_atm_how">Code temporaire par SMS, à taper au distributeur</string>
+    <!-- Favoris MVola -->
+    <string name="fav_add">Ajouter aux favoris</string>
+    <string name="fav_saved">Dans tes favoris</string>
+    <string name="fav_section">Favoris</string>
+    <string name="fav_close">Fermer</string>
+    <string name="fav_delete">Supprimer ce favori</string>
+    <string name="fav_invalid">Ce favori ne marche plus (offre retirée ou numéro invalide). Tu peux le supprimer.</string>
+    <string name="fav_send">Envoyer %1$s</string>
+    <string name="fav_credit_me">Crédit %1$s</string>
+    <string name="fav_credit_other">Crédit %1$s</string>
+    <string name="fav_withdraw">Retrait %1$s</string>
+    <string name="fav_offer">%1$s</string>
+    <string name="fav_for_me">Pour mon numéro</string>
 </resources>

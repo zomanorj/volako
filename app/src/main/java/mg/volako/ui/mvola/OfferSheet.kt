@@ -32,6 +32,7 @@ import mg.volako.core.designsystem.component.formatAriary
 import mg.volako.core.designsystem.theme.AmountTextStyle
 import mg.volako.core.designsystem.theme.Sizes
 import mg.volako.core.designsystem.theme.Spacing
+import mg.volako.core.model.Favorite
 import mg.volako.core.ussd.MvolaUssd
 import mg.volako.core.ussd.OfferFamily
 import mg.volako.core.ussd.UssdOperation
@@ -47,6 +48,7 @@ import mg.volako.core.designsystem.R as DesignR
 fun OfferSheet(
     mvolaBalance: Long,
     onLaunch: (UssdRequest) -> Unit,
+    onSaveFavorite: (Favorite) -> Unit,
     onDismiss: () -> Unit,
 ) {
     var family by rememberSaveable { mutableStateOf(OfferFamily.YELOW) }
@@ -86,6 +88,7 @@ fun OfferSheet(
                         request = ready.request,
                         onLaunch = { onLaunch(ready.request) },
                         onEdit = { chosenId = null },
+                        onSaveFavorite = { favoriteOf(UssdOperation.OfferForMe(chosen))?.let(onSaveFavorite) },
                     )
                 }
                 return@Column

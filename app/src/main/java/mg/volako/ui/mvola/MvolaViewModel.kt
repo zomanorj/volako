@@ -7,24 +7,31 @@ import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.flow.stateIn
 import mg.volako.VolakoApplication
+import mg.volako.core.data.FavoriteRepository
 import mg.volako.core.data.TransactionRepository
 import mg.volako.core.domain.ContactKind
 import mg.volako.core.domain.RecentContact
 import mg.volako.core.domain.RecentContacts
+import mg.volako.core.model.Favorite
 
 // Numeros proposes dans l'onglet MVola, retrouves dans l'historique des SMS
 data class MvolaUiState(
     val people: List<RecentContact> = emptyList(),
     val creditTargets: List<RecentContact> = emptyList(),
     val agents: List<RecentContact> = emptyList(),
+    val favorites: List<Favorite> = emptyList(),
 )
 
-class MvolaViewModel(repository: TransactionRepository) : ViewModel() {
+class MvolaViewModel(
+    repository: TransactionRepository,
+    private val favorites: FavoriteRepository,
+) : ViewModel() {
 
-    val uiState: StateFlow<MvolaUiState> = repository.observeTransactions().map { all ->
+    val uiState: StateFlow<MvolaUiState> = combine(repository.observeTransactions(), favorites.observeFavorites()) { all, favs ->
         MvolaUiState(
             people = RecentContacts.from(all, ContactKind.PEOPLE),
             // les numeros deja recharges d'abord, completes par les personnes connues
@@ -32,13 +39,25 @@ class MvolaViewModel(repository: TransactionRepository) : ViewModel() {
                 .distinctBy { it.phone }
                 .take(6),
             agents = RecentContacts.from(all, ContactKind.AGENT),
+            favorites = favs,
         )
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), MvolaUiState())
+
+    // pas de doublon : si le meme favori existe deja, on ne fait rien
+    fun addFavorite(favorite: Favorite) {
+        if (uiState.value.favorites.any { it.sameAs(favorite) }) return
+        viewModelScope.launch { favorites.add(favorite) }
+    }
+
+    fun deleteFavorite(id: Long) {
+        viewModelScope.launch { favorites.delete(id) }
+    }
 
     companion object {
         val Factory = viewModelFactory {
             initializer {
-                MvolaViewModel((this[APPLICATION_KEY] as VolakoApplication).container.transactionRepository)
+                val container = (this[APPLICATION_KEY] as VolakoApplication).container
+                MvolaViewModel(container.transactionRepository, container.favoriteRepository)
             }
         }
     }
